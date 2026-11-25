@@ -27,6 +27,7 @@ addEventBtn.addEventListener("click", () => {
 });
 
 const eventList = document.getElementById("event-list");
+let events = JSON.parse(localStorage.getItem("events")) || [];
 
 eventForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -42,24 +43,48 @@ eventForm.addEventListener("submit", (e) => {
         return;
     }
 
-    const eventItem = document.createElement("div");
-    eventItem.className = "event-item";
+    const newEvent = {
+        name: name,
+        day: day,
+        start: start,
+        end: end,
+        category: category
+    };
 
-    const eventTitle = document.createElement("strong");
-    eventTitle.textContent = name;
+    events.push(newEvent);
 
-    const eventDetails = document.createElement("p");
-    eventDetails.textContent = `${day} | ${start} - ${end} | ${category}`;
+    localStorage.setItem("events", JSON.stringify(events));
 
-    eventItem.appendChild(eventTitle);
-    eventItem.appendChild(eventDetails);
-
-    if (eventList.querySelector("p")?.textContent === "No recurring events added yet.") {
-        eventList.innerHTML = "";
-    }
-
-    eventList.appendChild(eventItem);
+    displayEvents();
 
     eventForm.reset();
     eventForm.hidden = true;
 });
+
+function displayEvents() {
+    eventList.innerHTML = "";
+
+    if (events.length === 0) {
+        eventList.textContent = "No recurring events added yet.";
+        return;
+    }
+
+    events.forEach((event) => {
+        const eventItem = document.createElement("div");
+        eventItem.className = "event-item";
+
+        const eventTitle = document.createElement("strong");
+        eventTitle.textContent = event.name;
+
+        const eventDetails = document.createElement("p");
+        eventDetails.textContent =
+            `${event.day} | ${event.start} - ${event.end} | ${event.category}`;
+
+        eventItem.appendChild(eventTitle);
+        eventItem.appendChild(eventDetails);
+
+        eventList.appendChild(eventItem);
+    });
+}
+
+displayEvents();
