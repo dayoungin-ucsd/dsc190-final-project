@@ -9,3 +9,15 @@ body {
     background-color: #f7f8fc;
     color: #252638;
 }
+
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: white;
+    padding: 30px 20px;
+    border-right: 1px solid #e8eaf2;
+}
