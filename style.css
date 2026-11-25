@@ -47,3 +47,14 @@ body {
     border-radius: 10px;
     cursor: pointer;
 }
+
+.nav-item:hover {
+    background-color: #f0efff;
+    color: #6254d8;
+}
+
+.nav-item.active {
+    background-color: #eeebff;
+    color: #6254d8;
+    font-weight: bold;
+}
