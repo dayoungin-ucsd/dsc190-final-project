@@ -74,3 +74,43 @@ h1 {
     color: #85899c;
     margin-bottom: 30px;
 }
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background-color: white;
+    padding: 25px;
+    border-radius: 14px;
+    border: 1px solid #eceef5;
+}
+
+.card h3 {
+    font-size: 15px;
+    margin-bottom: 18px;
+    color: #555b70;
+}
+
+.card-number {
+    font-size: 30px;
+    font-weight: bold;
+    color: #6254d8;
+}
+
+.dashboard-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
