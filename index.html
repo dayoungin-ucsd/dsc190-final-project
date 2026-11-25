@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Study Planner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>📚 Smart Study Planner</h2>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" data-page="dashboard">
+                    🏠 Dashboard
+                </button>
+
+                <button class="nav-item" data-page="schedule">
+                    📅 Weekly Schedule
+                </button>
+
+                <button class="nav-item" data-page="assignments">
+                    📝 Assignments
+                </button>
+
+                <button class="nav-item" data-page="planner">
+                    ✨ Daily Planner
+                </button>
+
+                <button class="nav-item" data-page="settings">
+                    ⚙️ Settings
+                </button>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <section id="dashboard" class="page active">
+                <h1>Dashboard</h1>
+                <p class="subtitle">Welcome to your Smart Study Planner!</p>
+                
+                <div class="dashboard-cards">
+                    <div class="card">
+                        <h3>Today's Events</h3>
+                        <p class="card-number">0</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Pending Assignments</h3>
+                        <p class="card-number">0</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Total Remaining Hours</h3>
+                        <p class="card-number">0</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Overall Progress</h3>
+                        <p class="card-number">0%</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-sections">
+                    <div class="card">
+                        <h3>Today's Schedule</h3>
+                        <p>No events scheduled yet.</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>Upcoming Deadlines</h3>
+                        <p>No assignments added yet.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="schedule" class="page">
+                <h1>Weekly Schedule</h1>
+                <p class="subtitle">Manage your recurring classes and events.</p>
+
+                <div class="card">
+                    <h3>Your Weekly Schedule</h3>
+                    <p>No recurring events added yet.</p>
+                </div>
+            </section>
+
+            <section id="assignments" class="page">
+                <h1>Assignments</h1>
+                <p class="subtitle">Track deadlines, estimated hours, and progress.</p>
+
+                <div class="card">
+                    <h3>Your Assignments</h3>
+                    <p>No assignments added yet.</p>
+                </div>
+            </section>
+
+            <section id="planner" class="page">
+                <h1>Daily Planner</h1>
+                <p class="subtitle">Generate your personalized study plan.</p>
+
+                <div class="card">
+                    <h3>Today's Study Plan</h3>
+                    <p>Your generated daily plan will appear here.</p>
+
+                    <button class="primary-btn">
+                        ✨ Generate Today's Plan
+                    </button>
+                </div>
+            </section>
+
+            <section id="settings" class="page">
+                <h1>Settings</h1>
+                <p class="subtitle">Customize your study preferences.</p>
+
+                <div class="card">
+                    <h3>Study Preferences</h3>
+                    <p>Study hours and break settings will appear here.</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
