@@ -84,9 +84,53 @@
                     + Add Event
                 </button>
 
+                <form id="event-form" class="card" hidden>
+                    <h3>Add New Event</h3>
+
+                    <label for="event-name">Event Name</label>
+                    <input
+                        type="text"
+                        id="event-name"
+                        placeholder="e.g. DSC190 Lecture"
+                        required
+                    >
+
+                    <label for="event-day">Day</label>
+                    <select id="event-day" required>
+                        <option value="">Select a day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+
+                    <label for="event-start">Start Time</label>
+                    <input type="time" id="event-start" required>
+
+                    <label for="event-end">End Time</label>
+                    <input type="time" id="event-end" required>
+
+                    <label for="event-category">Category</label>
+                    <select id="event-category">
+                        <option value="Class">Class</option>
+                        <option value="Work">Work</option>
+                        <option value="Personal">Personal</option>
+                    </select>
+
+                    <button type="submit" class="primary-btn">
+                        Save Event
+                    </button>
+                </form>
+
                 <div class="card">
                     <h3>Your Weekly Schedule</h3>
-                    <p>No recurring events added yet.</p>
+
+                    <div id="event-list">
+                        <p>No recurring events added yet.</p>
+                    </div>
                 </div>
             </section>
 

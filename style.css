@@ -129,3 +129,40 @@ h1 {
 .primary-btn:hover {
     background-color: #5948ce;
 }
+
+#event-form {
+    margin-bottom: 20px;
+}
+
+#event-form label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+#event-form input,
+#event-form select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dcdfea;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.event-item {
+    padding: 15px;
+    margin-top: 10px;
+    background-color: #f7f8fc;
+    border-radius: 8px;
+}
+
+.event-item strong {
+    color: #6254d8;
+}
+
+.event-item p {
+    margin-top: 6px;
+    color: #555b70;
+    font-size: 14px;
+}
