@@ -58,3 +58,19 @@ body {
     color: #6254d8;
     font-weight: bold;
 }
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+    min-width: 0;
+}
+
+h1 {
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #85899c;
+    margin-bottom: 30px;
+}
