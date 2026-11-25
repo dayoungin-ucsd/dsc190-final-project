@@ -21,3 +21,29 @@ body {
     padding: 30px 20px;
     border-right: 1px solid #e8eaf2;
 }
+
+.logo {
+    margin-bottom: 40px;
+}
+
+.logo h2 {
+    font-size: 20px;
+    color: #6254d8;
+}
+
+.nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nav-item {
+    border: none;
+    background-color: transparent;
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 15px;
+    color: #555b70;
+    border-radius: 10px;
+    cursor: pointer;
+}
