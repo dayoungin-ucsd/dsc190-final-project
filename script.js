@@ -69,7 +69,7 @@ function displayEvents() {
         return;
     }
 
-    events.forEach((event) => {
+    events.forEach((event, index) => {
         const eventItem = document.createElement("div");
         eventItem.className = "event-item";
 
@@ -83,6 +83,19 @@ function displayEvents() {
         eventItem.appendChild(eventTitle);
         eventItem.appendChild(eventDetails);
 
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.className = "delete-btn";
+
+        deleteBtn.addEventListener("click", () => {
+            events.splice(index, 1);
+
+            localStorage.setItem("events", JSON.stringify(events));
+
+            displayEvents();
+        });
+
+        eventItem.appendChild(deleteBtn);
         eventList.appendChild(eventItem);
     });
 }
