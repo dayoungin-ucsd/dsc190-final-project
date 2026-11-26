@@ -282,3 +282,116 @@ h1 {
     border-radius: 8px;
     font-size: 14px;
 }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        padding: 15px;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .dashboard-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-sections {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-item {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    input,
+    select,
+    button {
+        max-width: 100%;
+    }
+}
+
+/* UI Polish */
+
+/* Smooth transitions */
+button,
+input,
+select,
+.card {
+    transition: all 0.2s ease;
+}
+
+/* Button hover effects */
+.primary-btn:hover {
+    filter: brightness(0.95);
+    transform: translateY(-2px);
+}
+
+.delete-btn:hover {
+    filter: brightness(0.9);
+}
+
+.progress-btn:hover {
+    filter: brightness(0.95);
+}
+
+/* Input focus effects */
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #9b8de5;
+    box-shadow: 0 0 0 3px rgba(155, 141, 229, 0.15);
+}
+
+/* Card hover effects */
+.card:hover {
+    box-shadow: 0 6px 20px rgba(100, 90, 150, 0.08);
+}
+
+/* Settings page */
+#settings label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555b70;
+}
+
+#settings input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dcdfea;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+#save-settings-btn {
+    margin-top: 20px;
+}
+
+#settings-message {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #6b5bb5;
+}
+
+/* Study plan spacing */
+#study-plan-list .event-item {
+    margin-bottom: 12px;
+}
+
+#study-summary p {
+    margin: 12px 0;
+}

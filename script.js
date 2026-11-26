@@ -573,8 +573,13 @@ function minutesToTime(totalMinutes) {
 function generateStudyPlan(availableSlots, prioritizedAssignments) {
     const studyPlan = [];
 
-    const STUDY_DURATION = 90;
-    const BREAK_DURATION = 15;
+    const STUDY_DURATION = Number(
+        localStorage.getItem("sessionDuration") ?? 90
+    );
+
+    const BREAK_DURATION = Number(
+        localStorage.getItem("breakDuration") ?? 15
+    );
 
     // Copy assignments so original data is not changed
     const tasks = prioritizedAssignments.map((assignment) => ({
@@ -608,7 +613,7 @@ function generateStudyPlan(availableSlots, prioritizedAssignments) {
                 currentTime += sessionMinutes;
                 task.remainingMinutes -= sessionMinutes;
 
-                // Add a break after a full 90-minute study session
+                // Add a break after a full study session
                 // only if there is more work to schedule.
                 const hasRemainingWork = tasks.some(
                     (item) => item.remainingMinutes > 0
@@ -617,6 +622,7 @@ function generateStudyPlan(availableSlots, prioritizedAssignments) {
                 if (
                     sessionMinutes === STUDY_DURATION &&
                     hasRemainingWork &&
+                    BREAK_DURATION > 0 &&
                     currentTime + BREAK_DURATION < slotEnd
                 ) {
                     studyPlan.push({
@@ -672,3 +678,63 @@ function displayStudySummary(studyPlan) {
 
     summary.hidden = false;
 }
+
+const studyStartInput = document.getElementById("study-start");
+const studyEndInput = document.getElementById("study-end");
+
+// Load previously saved study hours
+const savedStudyStart = localStorage.getItem("studyStart");
+const savedStudyEnd = localStorage.getItem("studyEnd");
+
+if (savedStudyStart) {
+    studyStartInput.value = savedStudyStart;
+}
+
+if (savedStudyEnd) {
+    studyEndInput.value = savedStudyEnd;
+}
+
+// Save study hours whenever they change
+studyStartInput.addEventListener("change", () => {
+    localStorage.setItem("studyStart", studyStartInput.value);
+});
+
+studyEndInput.addEventListener("change", () => {
+    localStorage.setItem("studyEnd", studyEndInput.value);
+});
+
+const sessionDurationInput = document.getElementById("session-duration");
+const breakDurationInput = document.getElementById("break-duration");
+const saveSettingsBtn = document.getElementById("save-settings-btn");
+const settingsMessage = document.getElementById("settings-message");
+
+// Load saved preferences
+sessionDurationInput.value =
+    localStorage.getItem("sessionDuration") || "90";
+
+breakDurationInput.value =
+    localStorage.getItem("breakDuration") ?? "15";
+
+// Save preferences
+saveSettingsBtn.addEventListener("click", () => {
+    const sessionDuration = Number(sessionDurationInput.value);
+    const breakDuration = Number(breakDurationInput.value);
+
+    if (
+        !Number.isInteger(sessionDuration) ||
+        sessionDuration < 15 ||
+        sessionDuration > 180 ||
+        !Number.isInteger(breakDuration) ||
+        breakDuration < 0 ||
+        breakDuration > 60
+    ) {
+        settingsMessage.textContent =
+            "Please enter valid study and break durations.";
+        return;
+    }
+
+    localStorage.setItem("sessionDuration", sessionDuration);
+    localStorage.setItem("breakDuration", breakDuration);
+
+    settingsMessage.textContent = "Settings saved successfully!";
+});

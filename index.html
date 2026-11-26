@@ -249,10 +249,34 @@
 
                 <div class="card">
                     <h3>Study Preferences</h3>
-                    <p>Study hours and break settings will appear here.</p>
+
+                    <label for="session-duration">Study Session Duration (minutes)</label>
+                    <input
+                        type="number"
+                        id="session-duration"
+                        min="15"
+                        max="180"
+                        step="5"
+                        value="90"
+                    >
+
+                    <label for="break-duration">Break Duration (minutes)</label>
+                    <input
+                        type="number"
+                        id="break-duration"
+                        min="0"
+                        max="60"
+                        step="5"
+                        value="15"
+                    >
+
+                    <button class="primary-btn" id="save-settings-btn">
+                        Save Settings
+                    </button>
+
+                    <p id="settings-message"></p>
                 </div>
             </section>
-
         </main>
     </div>
 
