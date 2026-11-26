@@ -77,6 +77,8 @@ function displayEvents() {
 
     if (events.length === 0) {
         eventList.textContent = "No recurring events added yet.";
+        updateDashboard();
+        displayTodaySchedule();
         return;
     }
 
@@ -109,6 +111,9 @@ function displayEvents() {
         eventItem.appendChild(deleteBtn);
         eventList.appendChild(eventItem);
     });
+
+    updateDashboard();
+    displayTodaySchedule();
 }
 
 displayEvents();
@@ -161,6 +166,7 @@ function displayAssignments() {
     if (assignments.length === 0) {
         assignmentList.textContent = "No assignments added yet.";
         updateDashboard();
+        displayUpcomingDeadlines();
         return;
     }
 
@@ -268,11 +274,11 @@ function displayAssignments() {
         });
 
         assignmentItem.appendChild(deleteBtn);
-
         assignmentList.appendChild(assignmentItem);
     });
 
     updateDashboard();
+    displayUpcomingDeadlines();
 }
 
 displayAssignments();
@@ -297,6 +303,118 @@ function updateDashboard() {
     });
 
     remainingHours.textContent = totalHours.toFixed(1);
+
+    const overallProgress = document.getElementById("overall-progress");
+
+    let totalProgress = 0;
+
+    assignments.forEach((assignment) => {
+        totalProgress += assignment.progress;
+    });
+
+    const averageProgress = assignments.length > 0
+        ? totalProgress / assignments.length
+        : 0;
+
+    overallProgress.textContent = `${Math.round(averageProgress)}%`;
+
+    const todayEvents = document.getElementById("today-events");
+
+    const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    ];
+
+    const today = days[new Date().getDay()];
+
+    const todaysEvents = events.filter((event) => {
+        return event.day === today;
+    });
+
+    todayEvents.textContent = todaysEvents.length;
+}
+
+function displayTodaySchedule() {
+    const scheduleList = document.getElementById("today-schedule");
+    scheduleList.innerHTML = "";
+
+    const days = [
+        "Sunday", "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday"
+    ];
+
+    const today = days[new Date().getDay()];
+
+    const todaysEvents = events
+        .filter((event) => event.day === today)
+        .sort((a, b) => a.start.localeCompare(b.start));
+
+    if (todaysEvents.length === 0) {
+        scheduleList.textContent = "No events scheduled for today.";
+        return;
+    }
+
+    todaysEvents.forEach((event) => {
+        const eventItem = document.createElement("div");
+        eventItem.className = "event-item";
+
+        const title = document.createElement("strong");
+        title.textContent = event.name;
+
+        const details = document.createElement("p");
+        details.textContent =
+            `${event.start} - ${event.end} | ${event.category}`;
+
+        eventItem.appendChild(title);
+        eventItem.appendChild(details);
+
+        scheduleList.appendChild(eventItem);
+    });
+}
+
+function displayUpcomingDeadlines() {
+    const deadlineList = document.getElementById("upcoming-deadlines");
+    deadlineList.innerHTML = "";
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const upcoming = assignments
+        .filter((assignment) => {
+            const dueDate = new Date(assignment.due + "T00:00:00");
+
+            return assignment.progress < 100 && dueDate >= today;
+        })
+        .sort((a, b) => a.due.localeCompare(b.due))
+        .slice(0, 3);
+
+    if (upcoming.length === 0) {
+        deadlineList.textContent = "No upcoming deadlines.";
+        return;
+    }
+
+    upcoming.forEach((assignment) => {
+        const item = document.createElement("div");
+        item.className = "assignment-item";
+
+        const title = document.createElement("strong");
+        title.textContent = assignment.name;
+
+        const details = document.createElement("p");
+        details.textContent = `${assignment.course} | Due: ${assignment.due}`;
+
+        item.appendChild(title);
+        item.appendChild(details);
+
+        deadlineList.appendChild(item);
+    });
 }
 
 updateDashboard();
+displayTodaySchedule();
+displayUpcomingDeadlines();
