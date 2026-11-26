@@ -491,7 +491,6 @@ studyEndInput.addEventListener("change", () => {
 
 studyDateInput.addEventListener("change", () => {
     planMessage.textContent = "";
-    displaySavedPlan();
 });
 
 function timeToMinutes(time) {
@@ -692,7 +691,7 @@ generatePlanBtn.addEventListener("click", () => {
         const shouldReplace = confirm(
             `A plan is already saved for ${dateString}.\n` +
             "Generate a new plan and replace the existing one?\n" +
-            "Your saved checkboxes for this date will be reset."
+            "Your saved checkboxes and notes for this date will be reset."
         );
 
         if (!shouldReplace) {
@@ -744,32 +743,33 @@ generatePlanBtn.addEventListener("click", () => {
     planMessage.textContent =
         `Study plan saved for ${dateString}!`;
 
-    displaySavedPlan();
+    displaySavedPlansList();
+    openPlanDetail(dateString);
 });
 
 function displaySavedPlan() {
     const dateString = studyDateInput.value;
     const savedPlan = savedPlans[dateString];
     const summary = document.getElementById("study-summary");
+    const dailyNotesInput = document.getElementById("daily-notes");
 
     planList.innerHTML = "";
 
     document.getElementById("study-plan-heading").textContent =
-        dateString
-            ? `Study Plan — ${dateString}`
-            : "Saved Study Plan";
+        dateString ? `Study Plan — ${dateString}` : "Study Plan";
 
     if (
         !savedPlan ||
         !Array.isArray(savedPlan.sessions) ||
         savedPlan.sessions.length === 0
     ) {
-        planList.textContent =
-            "No study plan saved for this date.";
-
+        planList.textContent = "No study sessions found.";
         summary.hidden = true;
+        dailyNotesInput.value = "";
         return;
     }
+
+    dailyNotesInput.value = savedPlan.notes || "";
 
     savedPlan.sessions.forEach((session) => {
         const sessionItem = document.createElement("div");
@@ -786,8 +786,7 @@ function displaySavedPlan() {
             sessionItem.classList.add("break-session");
 
             details.textContent =
-                `${session.start} - ${session.end} | ` +
-                `${session.duration} min break`;
+                `${session.start} - ${session.end} | ${session.duration} min break`;
 
             sessionItem.appendChild(title);
             sessionItem.appendChild(details);
@@ -802,8 +801,7 @@ function displaySavedPlan() {
         }
 
         details.textContent =
-            `${session.start} - ${session.end} | ` +
-            `${session.course} | ${session.duration} min`;
+            `${session.start} - ${session.end} | ${session.course} | ${session.duration} min`;
 
         sessionItem.appendChild(title);
         sessionItem.appendChild(details);
@@ -822,24 +820,21 @@ function displaySavedPlan() {
             session.completed = checkbox.checked;
             saveDailyPlans();
 
-            sessionItem.classList.toggle(
-                "completed",
-                session.completed
-            );
-
+            sessionItem.classList.toggle("completed", session.completed);
             displayStudySummary(savedPlan.sessions);
+            displaySavedPlansList();
         });
 
         checkboxLabel.appendChild(checkbox);
         checkboxLabel.appendChild(checkboxText);
         sessionItem.appendChild(checkboxLabel);
 
-        const progressSection = document.createElement("div");
-        progressSection.className = "session-progress";
-
         const assignment = assignments.find(
             (item) => item.id === session.assignmentId
         );
+
+        const progressSection = document.createElement("div");
+        progressSection.className = "session-progress";
 
         if (assignment) {
             const progressLabel = document.createElement("span");
@@ -865,15 +860,9 @@ function displaySavedPlan() {
                 updateAssignmentProgress(assignment.id);
             });
 
-            const progressNote = document.createElement("p");
-            progressNote.className = "session-progress-note";
-            progressNote.textContent =
-                "Updates the entire assignment, not just this session.";
-
             progressSection.appendChild(progressLabel);
             progressSection.appendChild(progressBar);
             progressSection.appendChild(progressBtn);
-            progressSection.appendChild(progressNote);
         } else {
             const missingText = document.createElement("p");
             missingText.className = "session-progress-note";
@@ -884,6 +873,29 @@ function displaySavedPlan() {
         }
 
         sessionItem.appendChild(progressSection);
+
+        const notesSection = document.createElement("div");
+        notesSection.className = "session-notes";
+
+        const notesLabel = document.createElement("label");
+        notesLabel.textContent = "Session Notes";
+
+        const notesInput = document.createElement("textarea");
+        notesInput.className = "notes-input";
+        notesInput.rows = 3;
+        notesInput.placeholder =
+            "Add specific tasks, goals, or reminders for this session...";
+        notesInput.value = session.notes || "";
+
+        notesInput.addEventListener("input", () => {
+            session.notes = notesInput.value;
+            saveDailyPlans();
+        });
+
+        notesSection.appendChild(notesLabel);
+        notesSection.appendChild(notesInput);
+
+        sessionItem.appendChild(notesSection);
         planList.appendChild(sessionItem);
     });
 
@@ -986,9 +998,7 @@ function displaySavedPlansList() {
     savedPlansList.innerHTML = "";
 
     const dates = Object.keys(savedPlans)
-        .filter((date) => {
-            return Array.isArray(savedPlans[date]?.sessions);
-        })
+        .filter((date) => Array.isArray(savedPlans[date]?.sessions))
         .sort((a, b) => b.localeCompare(a));
 
     if (dates.length === 0) {
@@ -1003,14 +1013,12 @@ function displaySavedPlansList() {
             (session) => session.type === "study"
         );
 
-        const completedSessions = studySessions.filter(
+        const completedCount = studySessions.filter(
             (session) => session.completed
-        );
+        ).length;
 
         const completion = studySessions.length > 0
-            ? Math.round(
-                (completedSessions.length / studySessions.length) * 100
-            )
+            ? Math.round((completedCount / studySessions.length) * 100)
             : 0;
 
         const planItem = document.createElement("div");
@@ -1024,10 +1032,20 @@ function displaySavedPlansList() {
 
         const completionText = document.createElement("p");
         completionText.textContent =
-            `${completion}% completed (${completedSessions.length}/${studySessions.length} sessions)`;
+            `${completion}% completed (${completedCount}/${studySessions.length} sessions)`;
+
+        const notePreview = document.createElement("p");
+        notePreview.className = "saved-plan-note";
+
+        const notes = (plan.notes || "").trim();
+
+        notePreview.textContent = notes
+            ? `📝 ${notes.length > 100 ? notes.slice(0, 100) + "..." : notes}`
+            : "📝 No notes yet";
 
         planInfo.appendChild(dateTitle);
         planInfo.appendChild(completionText);
+        planInfo.appendChild(notePreview);
 
         const viewBtn = document.createElement("button");
         viewBtn.type = "button";
@@ -1035,15 +1053,7 @@ function displaySavedPlansList() {
         viewBtn.textContent = "View Plan";
 
         viewBtn.addEventListener("click", () => {
-            studyDateInput.value = date;
-            planMessage.textContent = "";
-            displaySavedPlan();
-
-            document.getElementById("study-plan-heading")
-                .scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
+            openPlanDetail(date);
         });
 
         planItem.appendChild(planInfo);
@@ -1052,14 +1062,63 @@ function displaySavedPlansList() {
     });
 }
 
-const originalSaveDailyPlans = saveDailyPlans;
+const plannerHome = document.getElementById("planner-home");
+const plannerDetail = document.getElementById("planner-detail");
+const backToPlansBtn = document.getElementById("back-to-plans-btn");
 
-saveDailyPlans = function () {
-    originalSaveDailyPlans();
+function openPlanDetail(dateString) {
+    if (!savedPlans[dateString]) {
+        return;
+    }
+
+    studyDateInput.value = dateString;
+
+    plannerHome.hidden = true;
+    plannerDetail.hidden = false;
+
+    displaySavedPlan();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+function showPlannerHome() {
+    plannerDetail.hidden = true;
+    plannerHome.hidden = false;
+
     displaySavedPlansList();
-};
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+backToPlansBtn.addEventListener("click", showPlannerHome);
+
+const saveDailyNotesBtn = document.getElementById("save-daily-notes-btn");
+const dailyNotesInput = document.getElementById("daily-notes");
+const notesMessage = document.getElementById("notes-message");
+
+saveDailyNotesBtn.addEventListener("click", () => {
+    const dateString = studyDateInput.value;
+    const plan = savedPlans[dateString];
+
+    if (!plan) {
+        notesMessage.textContent = "No saved plan found.";
+        return;
+    }
+
+    plan.notes = dailyNotesInput.value;
+    saveDailyPlans();
+    displaySavedPlansList();
+
+    notesMessage.textContent = "Notes saved successfully!";
+});
 
 displayEvents();
 displayAssignments();
-displaySavedPlan();
 displaySavedPlansList();
+showPlannerHome();

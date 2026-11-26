@@ -212,168 +212,144 @@
             </section>
 
             <section id="planner" class="page">
-                <h1>Daily Planner</h1>
-                <p class="subtitle">
-                    Generate, save, and track your daily study plan.
-                </p>
+                <div id="planner-home">
+                    <h1>Daily Planner</h1>
+                    <p class="subtitle">
+                        Create and manage your study plans by date.
+                    </p>
 
-                <div class="card planner-controls">
-                    <h3>Plan Date &amp; Study Time</h3>
+                    <div class="card planner-controls">
+                        <h3>Create New Plan</h3>
 
-                    <label for="study-date">Study Date</label>
-                    <input
-                        type="date"
-                        id="study-date"
-                        required
-                    >
+                        <label for="study-date">Study Date</label>
+                        <input type="date" id="study-date" required>
 
-                    <div class="time-grid">
-                        <div>
-                            <label for="study-start">Start Time</label>
-                            <input
-                                type="time"
-                                id="study-start"
-                                value="09:00"
-                            >
+                        <div class="time-grid">
+                            <div>
+                                <label for="study-start">Start Time</label>
+                                <input type="time" id="study-start" value="09:00">
+                            </div>
+
+                            <div>
+                                <label for="study-end">End Time</label>
+                                <input type="time" id="study-end" value="22:00">
+                            </div>
                         </div>
 
-                        <div>
-                            <label for="study-end">End Time</label>
-                            <input
-                                type="time"
-                                id="study-end"
-                                value="22:00"
-                            >
+                        <button
+                            type="button"
+                            class="primary-btn"
+                            id="generate-plan-btn"
+                        >
+                            Generate &amp; Save Plan
+                        </button>
+
+                        <p
+                            id="plan-message"
+                            class="status-message"
+                            role="status"
+                        ></p>
+                    </div>
+
+                    <div class="card saved-plans-card">
+                        <h3>📅 My Study Plans</h3>
+                        <p class="helper-text">
+                            Select a date to view your study sessions and notes.
+                        </p>
+
+                        <div id="saved-plans-list">
+                            No saved plans yet.
                         </div>
                     </div>
-
-                    <p class="helper-text">
-                        Plans are saved separately for each date in this browser.
-                        Generating again replaces that date's plan.
-                    </p>
                 </div>
 
-                <button
-                    type="button"
-                    class="primary-btn"
-                    id="generate-plan-btn"
-                >
-                    Generate &amp; Save Plan
-                </button>
-
-                <p
-                    id="plan-message"
-                    class="status-message"
-                    role="status"
-                    aria-live="polite"
-                ></p>
-
-                <div class="card" id="study-summary" hidden>
-                    <h3>Study Summary</h3>
-
-                    <p>
-                        Total Study Time:
-                        <strong id="total-study-time">0 hours</strong>
-                    </p>
-
-                    <p>
-                        Study Sessions:
-                        <strong id="study-session-count">0</strong>
-                    </p>
-
-                    <p>
-                        Total Break Time:
-                        <strong id="total-break-time">0 minutes</strong>
-                    </p>
-
-                    <p>
-                        Completed Sessions:
-                        <strong id="completed-session-count">0 / 0</strong>
-                    </p>
-
-                    <p>
-                        Daily Completion:
-                        <strong id="daily-completion">0%</strong>
-                    </p>
-
-                    <div
-                        class="progress-bar"
-                        id="daily-completion-bar"
-                        role="progressbar"
-                        aria-label="Daily completion"
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                        aria-valuenow="0"
-                    >
-                        <div
-                            class="progress-fill"
-                            id="daily-completion-fill"
-                        ></div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <h3 id="study-plan-heading">Saved Study Plan</h3>
-
-                    <div id="study-plan-list">
-                        No study plan saved for this date.
-                    </div>
-                </div>
-
-                <div class="card saved-plans-card">
-                    <h3>📅 Saved Plans</h3>
-                    <p class="helper-text">
-                        View your previously generated study plans.
-                    </p>
-
-                    <div id="saved-plans-list">
-                        No saved plans yet.
-                    </div>
-                </div>
-            </section>
-
-            <section id="settings" class="page">
-                <h1>Settings</h1>
-                <p class="subtitle">Customize your study preferences.</p>
-
-                <div class="card">
-                    <h3>Study Preferences</h3>
-
-                    <label for="session-duration">
-                        Study Session Duration (minutes)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="session-duration"
-                        min="15"
-                        max="180"
-                        step="5"
-                        value="90"
-                    >
-
-                    <label for="break-duration">
-                        Break Duration (minutes)
-                    </label>
-
-                    <input
-                        type="number"
-                        id="break-duration"
-                        min="0"
-                        max="60"
-                        step="5"
-                        value="15"
-                    >
-
+                <div id="planner-detail" hidden>
                     <button
                         type="button"
-                        class="primary-btn"
-                        id="save-settings-btn"
+                        class="back-btn"
+                        id="back-to-plans-btn"
                     >
-                        Save Settings
+                        ← Back to My Study Plans
                     </button>
 
-                    <p id="settings-message" role="status"></p>
+                    <h1 id="study-plan-heading">Study Plan</h1>
+
+                    <div class="card" id="study-summary" hidden>
+                        <h3>Study Summary</h3>
+
+                        <p>
+                            Total Study Time:
+                            <strong id="total-study-time">0 hours</strong>
+                        </p>
+
+                        <p>
+                            Study Sessions:
+                            <strong id="study-session-count">0</strong>
+                        </p>
+
+                        <p>
+                            Total Break Time:
+                            <strong id="total-break-time">0 minutes</strong>
+                        </p>
+
+                        <p>
+                            Completed Sessions:
+                            <strong id="completed-session-count">0 / 0</strong>
+                        </p>
+
+                        <p>
+                            Daily Completion:
+                            <strong id="daily-completion">0%</strong>
+                        </p>
+
+                        <div
+                            class="progress-bar"
+                            id="daily-completion-bar"
+                            role="progressbar"
+                            aria-label="Daily completion"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow="0"
+                        >
+                            <div
+                                class="progress-fill"
+                                id="daily-completion-fill"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Study Sessions</h3>
+
+                        <div id="study-plan-list">
+                            No study sessions found.
+                        </div>
+                    </div>
+
+                    <div class="card" id="daily-notes-card">
+                        <h3>📝 Daily Notes</h3>
+
+                        <textarea
+                            id="daily-notes"
+                            class="notes-input"
+                            rows="5"
+                            placeholder="Write your goals, reminders, or reflections for this day..."
+                        ></textarea>
+
+                        <button
+                            type="button"
+                            class="primary-btn"
+                            id="save-daily-notes-btn"
+                        >
+                            Save Notes
+                        </button>
+
+                        <p
+                            id="notes-message"
+                            class="status-message"
+                            role="status"
+                        ></p>
+                    </div>
                 </div>
             </section>
         </main>
