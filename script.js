@@ -43,6 +43,17 @@ eventForm.addEventListener("submit", (e) => {
         return;
     }
 
+    const hasConflict = events.some((event) => {
+        return event.day === day &&
+            start < event.end &&
+            end > event.start;
+    });
+
+    if (hasConflict) {
+        alert("This event overlaps with an existing event.");
+        return;
+    }
+
     const newEvent = {
         name: name,
         day: day,
