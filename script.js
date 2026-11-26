@@ -163,9 +163,20 @@ function displayAssignments() {
         return;
     }
 
+    assignments.sort((a, b) => a.due.localeCompare(b.due));
+
     assignments.forEach((assignment, index) => {
         const assignmentItem = document.createElement("div");
         assignmentItem.className = "assignment-item";
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const dueDate = new Date(assignment.due + "T00:00:00");
+
+        const daysLeft = Math.round(
+            (dueDate - today) / (1000 * 60 * 60 * 24)
+        );
 
         const assignmentTitle = document.createElement("strong");
         assignmentTitle.textContent = assignment.name;
@@ -174,8 +185,29 @@ function displayAssignments() {
         assignmentDetails.textContent =
             `${assignment.course} | Due: ${assignment.due} | Estimated: ${assignment.hours} hours | Progress: ${assignment.progress}%`;
 
+        const deadlineText = document.createElement("p");
+
+        if (daysLeft < 0) {
+            deadlineText.textContent = `${Math.abs(daysLeft)} days overdue`;
+        } else if (daysLeft === 0) {
+            deadlineText.textContent = "Due today!";
+        } else if (daysLeft === 1) {
+            deadlineText.textContent = "1 day left";
+        } else {
+            deadlineText.textContent = `${daysLeft} days left`;
+        }
+
+        if (daysLeft <= 0) {
+            deadlineText.className = "deadline-urgent";
+        } else if (daysLeft <= 6) {
+            deadlineText.className = "deadline-soon";
+        } else {
+            deadlineText.className = "deadline-safe";
+        }
+
         assignmentItem.appendChild(assignmentTitle);
         assignmentItem.appendChild(assignmentDetails);
+        assignmentItem.appendChild(deadlineText);
 
         const progressBar = document.createElement("div");
         progressBar.className = "progress-bar";
