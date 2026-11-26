@@ -5,48 +5,102 @@ navItems.forEach((item) => {
     item.addEventListener("click", () => {
         const targetPage = item.dataset.page;
 
-        navItems.forEach((nav) => {
-            nav.classList.remove("active");
-        });
-
-        pages.forEach((page) => {
-            page.classList.remove("active");
-        });
+        navItems.forEach((nav) => nav.classList.remove("active"));
+        pages.forEach((page) => page.classList.remove("active"));
 
         item.classList.add("active");
-
         document.getElementById(targetPage).classList.add("active");
     });
 });
 
+const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+];
+
+function getLocalDateString(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
+function getDayName(dateString) {
+    return days[new Date(`${dateString}T12:00:00`).getDay()];
+}
+
+function getDaysBetween(startDate, endDate) {
+    const start = Date.parse(`${startDate}T00:00:00Z`);
+    const end = Date.parse(`${endDate}T00:00:00Z`);
+
+    return Math.round((end - start) / 86400000);
+}
+
+function createId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+    }
+
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function loadStoredArray(key) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key));
+        return Array.isArray(value) ? value : [];
+    } catch {
+        return [];
+    }
+}
+
+function loadStoredObject(key) {
+    try {
+        const value = JSON.parse(localStorage.getItem(key));
+
+        return value && typeof value === "object" && !Array.isArray(value)
+            ? value
+            : {};
+    } catch {
+        return {};
+    }
+}
+
 const addEventBtn = document.getElementById("add-event-btn");
 const eventForm = document.getElementById("event-form");
+const eventList = document.getElementById("event-list");
+
+let events = loadStoredArray("events");
 
 addEventBtn.addEventListener("click", () => {
     eventForm.hidden = !eventForm.hidden;
 });
 
-const eventList = document.getElementById("event-list");
-let events = JSON.parse(localStorage.getItem("events")) || [];
-
 eventForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const name = document.getElementById("event-name").value;
+    const name = document.getElementById("event-name").value.trim();
     const day = document.getElementById("event-day").value;
     const start = document.getElementById("event-start").value;
     const end = document.getElementById("event-end").value;
     const category = document.getElementById("event-category").value;
 
-    if (end <= start) {
-        alert("End time must be after start time.");
+    if (!name || !day || !start || !end || end <= start) {
+        alert("Please enter valid event information.");
         return;
     }
 
     const hasConflict = events.some((event) => {
-        return event.day === day &&
+        return (
+            event.day === day &&
             start < event.end &&
-            end > event.start;
+            end > event.start
+        );
     });
 
     if (hasConflict) {
@@ -54,15 +108,13 @@ eventForm.addEventListener("submit", (e) => {
         return;
     }
 
-    const newEvent = {
-        name: name,
-        day: day,
-        start: start,
-        end: end,
-        category: category
-    };
-
-    events.push(newEvent);
+    events.push({
+        name,
+        day,
+        start,
+        end,
+        category
+    });
 
     localStorage.setItem("events", JSON.stringify(events));
 
@@ -77,40 +129,35 @@ function displayEvents() {
 
     if (events.length === 0) {
         eventList.textContent = "No recurring events added yet.";
-        updateDashboard();
-        displayTodaySchedule();
-        return;
-    }
+    } else {
+        events.forEach((event, index) => {
+            const eventItem = document.createElement("div");
+            eventItem.className = "event-item";
 
-    events.forEach((event, index) => {
-        const eventItem = document.createElement("div");
-        eventItem.className = "event-item";
+            const title = document.createElement("strong");
+            title.textContent = event.name;
 
-        const eventTitle = document.createElement("strong");
-        eventTitle.textContent = event.name;
+            const details = document.createElement("p");
+            details.textContent =
+                `${event.day} | ${event.start} - ${event.end} | ${event.category}`;
 
-        const eventDetails = document.createElement("p");
-        eventDetails.textContent =
-            `${event.day} | ${event.start} - ${event.end} | ${event.category}`;
+            const deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.textContent = "Delete";
+            deleteBtn.className = "delete-btn";
 
-        eventItem.appendChild(eventTitle);
-        eventItem.appendChild(eventDetails);
+            deleteBtn.addEventListener("click", () => {
+                events.splice(index, 1);
+                localStorage.setItem("events", JSON.stringify(events));
+                displayEvents();
+            });
 
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Delete";
-        deleteBtn.className = "delete-btn";
-
-        deleteBtn.addEventListener("click", () => {
-            events.splice(index, 1);
-
-            localStorage.setItem("events", JSON.stringify(events));
-
-            displayEvents();
+            eventItem.appendChild(title);
+            eventItem.appendChild(details);
+            eventItem.appendChild(deleteBtn);
+            eventList.appendChild(eventItem);
         });
-
-        eventItem.appendChild(deleteBtn);
-        eventList.appendChild(eventItem);
-    });
+    }
 
     updateDashboard();
     displayTodaySchedule();
@@ -118,13 +165,26 @@ function displayEvents() {
 
 const addAssignmentBtn = document.getElementById("add-assignment-btn");
 const assignmentForm = document.getElementById("assignment-form");
+const assignmentList = document.getElementById("assignment-list");
+
+let assignments = loadStoredArray("assignments");
+
+let assignmentsChanged = false;
+
+assignments.forEach((assignment) => {
+    if (!assignment.id) {
+        assignment.id = createId();
+        assignmentsChanged = true;
+    }
+});
+
+if (assignmentsChanged) {
+    localStorage.setItem("assignments", JSON.stringify(assignments));
+}
 
 addAssignmentBtn.addEventListener("click", () => {
     assignmentForm.hidden = !assignmentForm.hidden;
 });
-
-const assignmentList = document.getElementById("assignment-list");
-let assignments = JSON.parse(localStorage.getItem("assignments")) || [];
 
 assignmentForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -135,28 +195,73 @@ assignmentForm.addEventListener("submit", (e) => {
     const hours = Number(document.getElementById("assignment-hours").value);
     const progress = Number(document.getElementById("assignment-progress").value);
 
-    if (!name || !course || !due || hours <= 0 || progress < 0 || progress > 100) {
+    if (
+        !name ||
+        !course ||
+        !due ||
+        !Number.isFinite(hours) ||
+        hours <= 0 ||
+        !Number.isFinite(progress) ||
+        progress < 0 ||
+        progress > 100
+    ) {
         alert("Please enter valid assignment information.");
         return;
     }
 
-    const newAssignment = {
-        name: name,
-        course: course,
-        due: due,
-        hours: hours,
-        progress: progress
-    };
+    assignments.push({
+        id: createId(),
+        name,
+        course,
+        due,
+        hours,
+        progress
+    });
 
-    assignments.push(newAssignment);
-
-    localStorage.setItem("assignments", JSON.stringify(assignments));
-
-    displayAssignments();
+    saveAssignments();
 
     assignmentForm.reset();
     assignmentForm.hidden = true;
 });
+
+function saveAssignments() {
+    localStorage.setItem("assignments", JSON.stringify(assignments));
+    displayAssignments();
+    displaySavedPlan();
+}
+
+function updateAssignmentProgress(assignmentId) {
+    const assignment = assignments.find((item) => item.id === assignmentId);
+
+    if (!assignment) {
+        alert("This assignment no longer exists.");
+        return;
+    }
+
+    const input = prompt(
+        "Enter overall assignment progress (0-100):",
+        assignment.progress
+    );
+
+    if (input === null) {
+        return;
+    }
+
+    const value = Number(input);
+
+    if (
+        input.trim() === "" ||
+        !Number.isFinite(value) ||
+        value < 0 ||
+        value > 100
+    ) {
+        alert("Please enter a number between 0 and 100.");
+        return;
+    }
+
+    assignment.progress = value;
+    saveAssignments();
+}
 
 function displayAssignments() {
     assignmentList.innerHTML = "";
@@ -168,32 +273,33 @@ function displayAssignments() {
         return;
     }
 
-    assignments.sort((a, b) => a.due.localeCompare(b.due));
+    const sortedAssignments = [...assignments].sort(
+        (a, b) => a.due.localeCompare(b.due)
+    );
 
-    assignments.forEach((assignment, index) => {
+    sortedAssignments.forEach((assignment) => {
         const assignmentItem = document.createElement("div");
         assignmentItem.className = "assignment-item";
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const dueDate = new Date(assignment.due + "T00:00:00");
-
-        const daysLeft = Math.round(
-            (dueDate - today) / (1000 * 60 * 60 * 24)
+        const daysLeft = getDaysBetween(
+            getLocalDateString(),
+            assignment.due
         );
 
-        const assignmentTitle = document.createElement("strong");
-        assignmentTitle.textContent = assignment.name;
+        const title = document.createElement("strong");
+        title.textContent = assignment.name;
 
-        const assignmentDetails = document.createElement("p");
-        assignmentDetails.textContent =
-            `${assignment.course} | Due: ${assignment.due} | Estimated: ${assignment.hours} hours | Progress: ${assignment.progress}%`;
+        const details = document.createElement("p");
+        details.textContent =
+            `${assignment.course} | Due: ${assignment.due} | ` +
+            `Estimated: ${assignment.hours} hours | ` +
+            `Progress: ${assignment.progress}%`;
 
         const deadlineText = document.createElement("p");
 
         if (daysLeft < 0) {
-            deadlineText.textContent = `${Math.abs(daysLeft)} days overdue`;
+            deadlineText.textContent =
+                `${Math.abs(daysLeft)} days overdue`;
         } else if (daysLeft === 0) {
             deadlineText.textContent = "Due today!";
         } else if (daysLeft === 1) {
@@ -210,10 +316,6 @@ function displayAssignments() {
             deadlineText.className = "deadline-safe";
         }
 
-        assignmentItem.appendChild(assignmentTitle);
-        assignmentItem.appendChild(assignmentDetails);
-        assignmentItem.appendChild(deadlineText);
-
         const progressBar = document.createElement("div");
         progressBar.className = "progress-bar";
 
@@ -222,56 +324,40 @@ function displayAssignments() {
         progressFill.style.width = `${assignment.progress}%`;
 
         progressBar.appendChild(progressFill);
-        assignmentItem.appendChild(progressBar);
 
         const progressBtn = document.createElement("button");
+        progressBtn.type = "button";
         progressBtn.textContent = "Update Progress";
         progressBtn.className = "progress-btn";
 
         progressBtn.addEventListener("click", () => {
-            const newProgress = prompt(
-                "Enter new progress (0-100):",
-                assignment.progress
-            );
-
-            if (newProgress === null) {
-                return;
-            }
-
-            const progressValue = Number(newProgress);
-
-            if (
-                newProgress.trim() === "" ||
-                !Number.isFinite(progressValue) ||
-                progressValue < 0 ||
-                progressValue > 100
-            ) {
-                alert("Please enter a number between 0 and 100.");
-                return;
-            }
-
-            assignments[index].progress = progressValue;
-
-            localStorage.setItem("assignments", JSON.stringify(assignments));
-
-            displayAssignments();
+            updateAssignmentProgress(assignment.id);
         });
 
-        assignmentItem.appendChild(progressBtn);
-
         const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
         deleteBtn.textContent = "Delete";
         deleteBtn.className = "delete-btn";
 
         deleteBtn.addEventListener("click", () => {
-            assignments.splice(index, 1);
+            if (!confirm(`Delete "${assignment.name}"?`)) {
+                return;
+            }
 
-            localStorage.setItem("assignments", JSON.stringify(assignments));
+            assignments = assignments.filter(
+                (item) => item.id !== assignment.id
+            );
 
-            displayAssignments();
+            saveAssignments();
         });
 
+        assignmentItem.appendChild(title);
+        assignmentItem.appendChild(details);
+        assignmentItem.appendChild(deadlineText);
+        assignmentItem.appendChild(progressBar);
+        assignmentItem.appendChild(progressBtn);
         assignmentItem.appendChild(deleteBtn);
+
         assignmentList.appendChild(assignmentItem);
     });
 
@@ -280,71 +366,42 @@ function displayAssignments() {
 }
 
 function updateDashboard() {
-    const pendingCount = document.getElementById("pending-count");
+    const pendingAssignments = assignments.filter(
+        (assignment) => assignment.progress < 100
+    );
 
-    const pendingAssignments = assignments.filter((assignment) => {
-        return assignment.progress < 100;
-    });
+    document.getElementById("pending-count").textContent =
+        pendingAssignments.length;
 
-    pendingCount.textContent = pendingAssignments.length;
+    const totalHours = assignments.reduce((total, assignment) => {
+        return total + assignment.hours * (1 - assignment.progress / 100);
+    }, 0);
 
-    const remainingHours = document.getElementById("remaining-hours");
+    document.getElementById("remaining-hours").textContent =
+        totalHours.toFixed(1);
 
-    let totalHours = 0;
-
-    assignments.forEach((assignment) => {
-        const remaining = assignment.hours * (1 - assignment.progress / 100);
-
-        totalHours += remaining;
-    });
-
-    remainingHours.textContent = totalHours.toFixed(1);
-
-    const overallProgress = document.getElementById("overall-progress");
-
-    let totalProgress = 0;
-
-    assignments.forEach((assignment) => {
-        totalProgress += assignment.progress;
-    });
+    const totalProgress = assignments.reduce((total, assignment) => {
+        return total + assignment.progress;
+    }, 0);
 
     const averageProgress = assignments.length > 0
         ? totalProgress / assignments.length
         : 0;
 
-    overallProgress.textContent = `${Math.round(averageProgress)}%`;
+    document.getElementById("overall-progress").textContent =
+        `${Math.round(averageProgress)}%`;
 
-    const todayEvents = document.getElementById("today-events");
+    const today = getDayName(getLocalDateString());
 
-    const days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday"
-    ];
-
-    const today = days[new Date().getDay()];
-
-    const todaysEvents = events.filter((event) => {
-        return event.day === today;
-    });
-
-    todayEvents.textContent = todaysEvents.length;
+    document.getElementById("today-events").textContent =
+        events.filter((event) => event.day === today).length;
 }
 
 function displayTodaySchedule() {
     const scheduleList = document.getElementById("today-schedule");
     scheduleList.innerHTML = "";
 
-    const days = [
-        "Sunday", "Monday", "Tuesday", "Wednesday",
-        "Thursday", "Friday", "Saturday"
-    ];
-
-    const today = days[new Date().getDay()];
+    const today = getDayName(getLocalDateString());
 
     const todaysEvents = events
         .filter((event) => event.day === today)
@@ -368,7 +425,6 @@ function displayTodaySchedule() {
 
         eventItem.appendChild(title);
         eventItem.appendChild(details);
-
         scheduleList.appendChild(eventItem);
     });
 }
@@ -377,14 +433,11 @@ function displayUpcomingDeadlines() {
     const deadlineList = document.getElementById("upcoming-deadlines");
     deadlineList.innerHTML = "";
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getLocalDateString();
 
     const upcoming = assignments
         .filter((assignment) => {
-            const dueDate = new Date(assignment.due + "T00:00:00");
-
-            return assignment.progress < 100 && dueDate >= today;
+            return assignment.progress < 100 && assignment.due >= today;
         })
         .sort((a, b) => a.due.localeCompare(b.due))
         .slice(0, 3);
@@ -402,119 +455,95 @@ function displayUpcomingDeadlines() {
         title.textContent = assignment.name;
 
         const details = document.createElement("p");
-        details.textContent = `${assignment.course} | Due: ${assignment.due}`;
+        details.textContent =
+            `${assignment.course} | Due: ${assignment.due}`;
 
         item.appendChild(title);
         item.appendChild(details);
-
         deadlineList.appendChild(item);
     });
 }
 
-displayEvents();
-displayAssignments();
-
+const studyDateInput = document.getElementById("study-date");
+const studyStartInput = document.getElementById("study-start");
+const studyEndInput = document.getElementById("study-end");
 const generatePlanBtn = document.getElementById("generate-plan-btn");
+const planList = document.getElementById("study-plan-list");
+const planMessage = document.getElementById("plan-message");
 
-generatePlanBtn.addEventListener("click", () => {
-    const startTime = document.getElementById("study-start").value;
-    const endTime = document.getElementById("study-end").value;
+let savedPlans = loadStoredObject("dailyPlans");
 
-    if (!startTime || !endTime) {
-        alert("Please select your available study time.");
-        return;
-    }
+studyDateInput.value = getLocalDateString();
 
-    if (endTime <= startTime) {
-        alert("End time must be after start time.");
-        return;
-    }
+studyStartInput.value =
+    localStorage.getItem("studyStart") || "09:00";
 
-    const availableSlots = getAvailableStudySlots(startTime, endTime);
-    const prioritizedAssignments = getPrioritizedAssignments();
+studyEndInput.value =
+    localStorage.getItem("studyEnd") || "22:00";
 
-    const studyPlan = generateStudyPlan(
-        availableSlots,
-        prioritizedAssignments
-    );
-
-    const planList = document.getElementById("study-plan-list");
-    planList.innerHTML = "";
-
-    document.getElementById("study-summary").hidden = true;
-
-    if (availableSlots.length === 0) {
-        planList.textContent = "No available study time today.";
-        return;
-    }
-
-    if (prioritizedAssignments.length === 0) {
-        planList.textContent = "No pending assignments to schedule.";
-        return;
-    }
-
-    studyPlan.forEach((session) => {
-        const sessionItem = document.createElement("div");
-        sessionItem.className = "event-item";
-
-        const title = document.createElement("strong");
-        title.textContent = session.name;
-
-        const details = document.createElement("p");
-
-        if (session.type === "break") {
-            details.textContent =
-                `${session.start} - ${session.end} | ${session.duration} min break`;
-        } else {
-            details.textContent =
-                `${session.start} - ${session.end} | ${session.course} | ${session.duration} min`;
-        }
-
-        sessionItem.appendChild(title);
-        sessionItem.appendChild(details);
-
-        planList.appendChild(sessionItem);
-    });
-
-    displayStudySummary(studyPlan);
+studyStartInput.addEventListener("change", () => {
+    localStorage.setItem("studyStart", studyStartInput.value);
 });
 
-function getAvailableStudySlots(startTime, endTime) {
-    const days = [
-        "Sunday", "Monday", "Tuesday", "Wednesday",
-        "Thursday", "Friday", "Saturday"
-    ];
+studyEndInput.addEventListener("change", () => {
+    localStorage.setItem("studyEnd", studyEndInput.value);
+});
 
-    const today = days[new Date().getDay()];
+studyDateInput.addEventListener("change", () => {
+    planMessage.textContent = "";
+    displaySavedPlan();
+});
 
-    const todaysEvents = events
-        .filter((event) => event.day === today)
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+}
+
+function minutesToTime(totalMinutes) {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return (
+        `${String(hours).padStart(2, "0")}:` +
+        `${String(minutes).padStart(2, "0")}`
+    );
+}
+
+function getAvailableStudySlots(startTime, endTime, dateString) {
+    const selectedDay = getDayName(dateString);
+
+    const selectedEvents = events
+        .filter((event) => event.day === selectedDay)
         .sort((a, b) => a.start.localeCompare(b.start));
 
     const availableSlots = [];
     let currentTime = startTime;
 
-    todaysEvents.forEach((event) => {
-        // Ignore events outside the available study hours
+    selectedEvents.forEach((event) => {
         if (event.end <= startTime || event.start >= endTime) {
             return;
         }
 
-        // Save free time before the next event
-        if (event.start > currentTime) {
+        const eventStart = event.start > startTime
+            ? event.start
+            : startTime;
+
+        const eventEnd = event.end < endTime
+            ? event.end
+            : endTime;
+
+        if (eventStart > currentTime) {
             availableSlots.push({
                 start: currentTime,
-                end: event.start < endTime ? event.start : endTime
+                end: eventStart
             });
         }
 
-        // Move forward to the end of the event
-        if (event.end > currentTime) {
-            currentTime = event.end;
+        if (eventEnd > currentTime) {
+            currentTime = eventEnd;
         }
     });
 
-    // Save any remaining free time
     if (currentTime < endTime) {
         availableSlots.push({
             start: currentTime,
@@ -525,63 +554,44 @@ function getAvailableStudySlots(startTime, endTime) {
     return availableSlots;
 }
 
-function getPrioritizedAssignments() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const prioritizedAssignments = assignments
-        .filter((assignment) => assignment.progress < 100)
+function getPrioritizedAssignments(dateString) {
+    return assignments
+        .filter((assignment) => {
+            return assignment.progress < 100;
+        })
         .map((assignment) => {
-            const dueDate = new Date(assignment.due + "T00:00:00");
-
-            const daysLeft = Math.round(
-                (dueDate - today) / (1000 * 60 * 60 * 24)
+            const daysLeft = getDaysBetween(
+                dateString,
+                assignment.due
             );
 
             const remainingHours =
                 assignment.hours * (1 - assignment.progress / 100);
 
             const urgency = Math.max(daysLeft + 1, 1);
-
             const priorityScore = remainingHours / urgency;
 
             return {
                 ...assignment,
-                daysLeft: daysLeft,
-                remainingHours: remainingHours,
-                priorityScore: priorityScore
+                daysLeft,
+                remainingHours,
+                priorityScore
             };
         })
         .sort((a, b) => b.priorityScore - a.priorityScore);
-
-    return prioritizedAssignments;
-}
-
-function timeToMinutes(time) {
-    const [hours, minutes] = time.split(":").map(Number);
-
-    return hours * 60 + minutes;
-}
-
-function minutesToTime(totalMinutes) {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 function generateStudyPlan(availableSlots, prioritizedAssignments) {
     const studyPlan = [];
 
-    const STUDY_DURATION = Number(
+    const studyDuration = Number(
         localStorage.getItem("sessionDuration") ?? 90
     );
 
-    const BREAK_DURATION = Number(
+    const breakDuration = Number(
         localStorage.getItem("breakDuration") ?? 15
     );
 
-    // Copy assignments so original data is not changed
     const tasks = prioritizedAssignments.map((assignment) => ({
         ...assignment,
         remainingMinutes: Math.ceil(assignment.remainingHours * 60)
@@ -596,44 +606,50 @@ function generateStudyPlan(availableSlots, prioritizedAssignments) {
                 const availableMinutes = slotEnd - currentTime;
 
                 const sessionMinutes = Math.min(
-                    STUDY_DURATION,
+                    studyDuration,
                     task.remainingMinutes,
                     availableMinutes
                 );
 
+                if (sessionMinutes <= 0) {
+                    break;
+                }
+
                 studyPlan.push({
+                    id: createId(),
                     type: "study",
+                    assignmentId: task.id,
                     name: task.name,
                     course: task.course,
                     start: minutesToTime(currentTime),
                     end: minutesToTime(currentTime + sessionMinutes),
-                    duration: sessionMinutes
+                    duration: sessionMinutes,
+                    completed: false
                 });
 
                 currentTime += sessionMinutes;
                 task.remainingMinutes -= sessionMinutes;
 
-                // Add a break after a full study session
-                // only if there is more work to schedule.
                 const hasRemainingWork = tasks.some(
                     (item) => item.remainingMinutes > 0
                 );
 
                 if (
-                    sessionMinutes === STUDY_DURATION &&
+                    sessionMinutes === studyDuration &&
                     hasRemainingWork &&
-                    BREAK_DURATION > 0 &&
-                    currentTime + BREAK_DURATION < slotEnd
+                    breakDuration > 0 &&
+                    currentTime + breakDuration < slotEnd
                 ) {
                     studyPlan.push({
+                        id: createId(),
                         type: "break",
                         name: "Break ☕",
                         start: minutesToTime(currentTime),
-                        end: minutesToTime(currentTime + BREAK_DURATION),
-                        duration: BREAK_DURATION
+                        end: minutesToTime(currentTime + breakDuration),
+                        duration: breakDuration
                     });
 
-                    currentTime += BREAK_DURATION;
+                    currentTime += breakDuration;
                 }
             }
 
@@ -644,6 +660,234 @@ function generateStudyPlan(availableSlots, prioritizedAssignments) {
     }
 
     return studyPlan;
+}
+
+function saveDailyPlans() {
+    localStorage.setItem("dailyPlans", JSON.stringify(savedPlans));
+}
+
+generatePlanBtn.addEventListener("click", () => {
+    const dateString = studyDateInput.value;
+    const startTime = studyStartInput.value;
+    const endTime = studyEndInput.value;
+
+    if (!dateString) {
+        alert("Please select a study date.");
+        return;
+    }
+
+    if (!startTime || !endTime) {
+        alert("Please select your available study time.");
+        return;
+    }
+
+    if (endTime <= startTime) {
+        alert("End time must be after start time.");
+        return;
+    }
+
+    const existingPlan = savedPlans[dateString];
+
+    if (existingPlan) {
+        const shouldReplace = confirm(
+            `A plan is already saved for ${dateString}.\n` +
+            "Generate a new plan and replace the existing one?\n" +
+            "Your saved checkboxes for this date will be reset."
+        );
+
+        if (!shouldReplace) {
+            return;
+        }
+    }
+
+    const availableSlots = getAvailableStudySlots(
+        startTime,
+        endTime,
+        dateString
+    );
+
+    const prioritizedAssignments =
+        getPrioritizedAssignments(dateString);
+
+    if (availableSlots.length === 0) {
+        planMessage.textContent =
+            "No available study time for this date.";
+        return;
+    }
+
+    if (prioritizedAssignments.length === 0) {
+        planMessage.textContent =
+            "No pending assignments to schedule.";
+        return;
+    }
+
+    const studyPlan = generateStudyPlan(
+        availableSlots,
+        prioritizedAssignments
+    );
+
+    if (studyPlan.length === 0) {
+        planMessage.textContent =
+            "No study sessions could be generated.";
+        return;
+    }
+
+    savedPlans[dateString] = {
+        date: dateString,
+        startTime,
+        endTime,
+        sessions: studyPlan
+    };
+
+    saveDailyPlans();
+
+    planMessage.textContent =
+        `Study plan saved for ${dateString}!`;
+
+    displaySavedPlan();
+});
+
+function displaySavedPlan() {
+    const dateString = studyDateInput.value;
+    const savedPlan = savedPlans[dateString];
+    const summary = document.getElementById("study-summary");
+
+    planList.innerHTML = "";
+
+    document.getElementById("study-plan-heading").textContent =
+        dateString
+            ? `Study Plan — ${dateString}`
+            : "Saved Study Plan";
+
+    if (
+        !savedPlan ||
+        !Array.isArray(savedPlan.sessions) ||
+        savedPlan.sessions.length === 0
+    ) {
+        planList.textContent =
+            "No study plan saved for this date.";
+
+        summary.hidden = true;
+        return;
+    }
+
+    savedPlan.sessions.forEach((session) => {
+        const sessionItem = document.createElement("div");
+        sessionItem.className = "event-item";
+
+        const title = document.createElement("strong");
+        title.className = "session-title";
+        title.textContent = session.name;
+
+        const details = document.createElement("p");
+        details.className = "session-details";
+
+        if (session.type === "break") {
+            sessionItem.classList.add("break-session");
+
+            details.textContent =
+                `${session.start} - ${session.end} | ` +
+                `${session.duration} min break`;
+
+            sessionItem.appendChild(title);
+            sessionItem.appendChild(details);
+            planList.appendChild(sessionItem);
+            return;
+        }
+
+        sessionItem.classList.add("study-session");
+
+        if (session.completed) {
+            sessionItem.classList.add("completed");
+        }
+
+        details.textContent =
+            `${session.start} - ${session.end} | ` +
+            `${session.course} | ${session.duration} min`;
+
+        sessionItem.appendChild(title);
+        sessionItem.appendChild(details);
+
+        const checkboxLabel = document.createElement("label");
+        checkboxLabel.className = "session-check";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = Boolean(session.completed);
+
+        const checkboxText = document.createElement("span");
+        checkboxText.textContent = "Study session completed";
+
+        checkbox.addEventListener("change", () => {
+            session.completed = checkbox.checked;
+            saveDailyPlans();
+
+            sessionItem.classList.toggle(
+                "completed",
+                session.completed
+            );
+
+            displayStudySummary(savedPlan.sessions);
+        });
+
+        checkboxLabel.appendChild(checkbox);
+        checkboxLabel.appendChild(checkboxText);
+        sessionItem.appendChild(checkboxLabel);
+
+        const progressSection = document.createElement("div");
+        progressSection.className = "session-progress";
+
+        const assignment = assignments.find(
+            (item) => item.id === session.assignmentId
+        );
+
+        if (assignment) {
+            const progressLabel = document.createElement("span");
+            progressLabel.className = "session-progress-label";
+            progressLabel.textContent =
+                `Overall Assignment Progress: ${assignment.progress}%`;
+
+            const progressBar = document.createElement("div");
+            progressBar.className = "progress-bar";
+
+            const progressFill = document.createElement("div");
+            progressFill.className = "progress-fill";
+            progressFill.style.width = `${assignment.progress}%`;
+
+            progressBar.appendChild(progressFill);
+
+            const progressBtn = document.createElement("button");
+            progressBtn.type = "button";
+            progressBtn.className = "progress-btn";
+            progressBtn.textContent = "Update Progress";
+
+            progressBtn.addEventListener("click", () => {
+                updateAssignmentProgress(assignment.id);
+            });
+
+            const progressNote = document.createElement("p");
+            progressNote.className = "session-progress-note";
+            progressNote.textContent =
+                "Updates the entire assignment, not just this session.";
+
+            progressSection.appendChild(progressLabel);
+            progressSection.appendChild(progressBar);
+            progressSection.appendChild(progressBtn);
+            progressSection.appendChild(progressNote);
+        } else {
+            const missingText = document.createElement("p");
+            missingText.className = "session-progress-note";
+            missingText.textContent =
+                "This assignment was deleted. Its study record is preserved.";
+
+            progressSection.appendChild(missingText);
+        }
+
+        sessionItem.appendChild(progressSection);
+        planList.appendChild(sessionItem);
+    });
+
+    displayStudySummary(savedPlan.sessions);
 }
 
 function displayStudySummary(studyPlan) {
@@ -667,55 +911,53 @@ function displayStudySummary(studyPlan) {
         0
     );
 
+    const completedCount = studySessions.filter(
+        (session) => session.completed
+    ).length;
+
+    const totalCount = studySessions.length;
+
+    const completion = totalCount > 0
+        ? Math.round((completedCount / totalCount) * 100)
+        : 0;
+
     document.getElementById("total-study-time").textContent =
         `${(totalStudyMinutes / 60).toFixed(1)} hours`;
 
     document.getElementById("study-session-count").textContent =
-        studySessions.length;
+        totalCount;
 
     document.getElementById("total-break-time").textContent =
         `${totalBreakMinutes} minutes`;
 
+    document.getElementById("completed-session-count").textContent =
+        `${completedCount} / ${totalCount}`;
+
+    document.getElementById("daily-completion").textContent =
+        `${completion}%`;
+
+    document.getElementById("daily-completion-fill").style.width =
+        `${completion}%`;
+
+    document.getElementById("daily-completion-bar").setAttribute(
+        "aria-valuenow",
+        String(completion)
+    );
+
     summary.hidden = false;
 }
-
-const studyStartInput = document.getElementById("study-start");
-const studyEndInput = document.getElementById("study-end");
-
-// Load previously saved study hours
-const savedStudyStart = localStorage.getItem("studyStart");
-const savedStudyEnd = localStorage.getItem("studyEnd");
-
-if (savedStudyStart) {
-    studyStartInput.value = savedStudyStart;
-}
-
-if (savedStudyEnd) {
-    studyEndInput.value = savedStudyEnd;
-}
-
-// Save study hours whenever they change
-studyStartInput.addEventListener("change", () => {
-    localStorage.setItem("studyStart", studyStartInput.value);
-});
-
-studyEndInput.addEventListener("change", () => {
-    localStorage.setItem("studyEnd", studyEndInput.value);
-});
 
 const sessionDurationInput = document.getElementById("session-duration");
 const breakDurationInput = document.getElementById("break-duration");
 const saveSettingsBtn = document.getElementById("save-settings-btn");
 const settingsMessage = document.getElementById("settings-message");
 
-// Load saved preferences
 sessionDurationInput.value =
-    localStorage.getItem("sessionDuration") || "90";
+    localStorage.getItem("sessionDuration") ?? "90";
 
 breakDurationInput.value =
     localStorage.getItem("breakDuration") ?? "15";
 
-// Save preferences
 saveSettingsBtn.addEventListener("click", () => {
     const sessionDuration = Number(sessionDurationInput.value);
     const breakDuration = Number(breakDurationInput.value);
@@ -733,8 +975,91 @@ saveSettingsBtn.addEventListener("click", () => {
         return;
     }
 
-    localStorage.setItem("sessionDuration", sessionDuration);
-    localStorage.setItem("breakDuration", breakDuration);
+    localStorage.setItem("sessionDuration", String(sessionDuration));
+    localStorage.setItem("breakDuration", String(breakDuration));
 
     settingsMessage.textContent = "Settings saved successfully!";
 });
+
+function displaySavedPlansList() {
+    const savedPlansList = document.getElementById("saved-plans-list");
+    savedPlansList.innerHTML = "";
+
+    const dates = Object.keys(savedPlans)
+        .filter((date) => {
+            return Array.isArray(savedPlans[date]?.sessions);
+        })
+        .sort((a, b) => b.localeCompare(a));
+
+    if (dates.length === 0) {
+        savedPlansList.textContent = "No saved plans yet.";
+        return;
+    }
+
+    dates.forEach((date) => {
+        const plan = savedPlans[date];
+
+        const studySessions = plan.sessions.filter(
+            (session) => session.type === "study"
+        );
+
+        const completedSessions = studySessions.filter(
+            (session) => session.completed
+        );
+
+        const completion = studySessions.length > 0
+            ? Math.round(
+                (completedSessions.length / studySessions.length) * 100
+            )
+            : 0;
+
+        const planItem = document.createElement("div");
+        planItem.className = "saved-plan-item";
+
+        const planInfo = document.createElement("div");
+        planInfo.className = "saved-plan-info";
+
+        const dateTitle = document.createElement("strong");
+        dateTitle.textContent = date;
+
+        const completionText = document.createElement("p");
+        completionText.textContent =
+            `${completion}% completed (${completedSessions.length}/${studySessions.length} sessions)`;
+
+        planInfo.appendChild(dateTitle);
+        planInfo.appendChild(completionText);
+
+        const viewBtn = document.createElement("button");
+        viewBtn.type = "button";
+        viewBtn.className = "progress-btn";
+        viewBtn.textContent = "View Plan";
+
+        viewBtn.addEventListener("click", () => {
+            studyDateInput.value = date;
+            planMessage.textContent = "";
+            displaySavedPlan();
+
+            document.getElementById("study-plan-heading")
+                .scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+        });
+
+        planItem.appendChild(planInfo);
+        planItem.appendChild(viewBtn);
+        savedPlansList.appendChild(planItem);
+    });
+}
+
+const originalSaveDailyPlans = saveDailyPlans;
+
+saveDailyPlans = function () {
+    originalSaveDailyPlans();
+    displaySavedPlansList();
+};
+
+displayEvents();
+displayAssignments();
+displaySavedPlan();
+displaySavedPlansList();
