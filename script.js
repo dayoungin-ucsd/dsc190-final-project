@@ -112,3 +112,132 @@ function displayEvents() {
 }
 
 displayEvents();
+
+const addAssignmentBtn = document.getElementById("add-assignment-btn");
+const assignmentForm = document.getElementById("assignment-form");
+
+addAssignmentBtn.addEventListener("click", () => {
+    assignmentForm.hidden = !assignmentForm.hidden;
+});
+
+const assignmentList = document.getElementById("assignment-list");
+let assignments = JSON.parse(localStorage.getItem("assignments")) || [];
+
+assignmentForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById("assignment-name").value.trim();
+    const course = document.getElementById("assignment-course").value.trim();
+    const due = document.getElementById("assignment-due").value;
+    const hours = Number(document.getElementById("assignment-hours").value);
+    const progress = Number(document.getElementById("assignment-progress").value);
+
+    if (!name || !course || !due || hours <= 0 || progress < 0 || progress > 100) {
+        alert("Please enter valid assignment information.");
+        return;
+    }
+
+    const newAssignment = {
+        name: name,
+        course: course,
+        due: due,
+        hours: hours,
+        progress: progress
+    };
+
+    assignments.push(newAssignment);
+
+    localStorage.setItem("assignments", JSON.stringify(assignments));
+
+    displayAssignments();
+
+    assignmentForm.reset();
+    assignmentForm.hidden = true;
+});
+
+function displayAssignments() {
+    assignmentList.innerHTML = "";
+
+    if (assignments.length === 0) {
+        assignmentList.textContent = "No assignments added yet.";
+        return;
+    }
+
+    assignments.forEach((assignment, index) => {
+        const assignmentItem = document.createElement("div");
+        assignmentItem.className = "assignment-item";
+
+        const assignmentTitle = document.createElement("strong");
+        assignmentTitle.textContent = assignment.name;
+
+        const assignmentDetails = document.createElement("p");
+        assignmentDetails.textContent =
+            `${assignment.course} | Due: ${assignment.due} | Estimated: ${assignment.hours} hours | Progress: ${assignment.progress}%`;
+
+        assignmentItem.appendChild(assignmentTitle);
+        assignmentItem.appendChild(assignmentDetails);
+
+        const progressBar = document.createElement("div");
+        progressBar.className = "progress-bar";
+
+        const progressFill = document.createElement("div");
+        progressFill.className = "progress-fill";
+        progressFill.style.width = `${assignment.progress}%`;
+
+        progressBar.appendChild(progressFill);
+        assignmentItem.appendChild(progressBar);
+
+        const progressBtn = document.createElement("button");
+        progressBtn.textContent = "Update Progress";
+        progressBtn.className = "progress-btn";
+
+        progressBtn.addEventListener("click", () => {
+            const newProgress = prompt(
+                "Enter new progress (0-100):",
+                assignment.progress
+            );
+
+            if (newProgress === null) {
+                return;
+            }
+
+            const progressValue = Number(newProgress);
+
+            if (
+                newProgress.trim() === "" ||
+                !Number.isFinite(progressValue) ||
+                progressValue < 0 ||
+                progressValue > 100
+            ) {
+                alert("Please enter a number between 0 and 100.");
+                return;
+            }
+
+            assignments[index].progress = progressValue;
+
+            localStorage.setItem("assignments", JSON.stringify(assignments));
+
+            displayAssignments();
+        });
+
+        assignmentItem.appendChild(progressBtn);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete";
+        deleteBtn.className = "delete-btn";
+
+        deleteBtn.addEventListener("click", () => {
+            assignments.splice(index, 1);
+
+            localStorage.setItem("assignments", JSON.stringify(assignments));
+
+            displayAssignments();
+        });
+
+        assignmentItem.appendChild(deleteBtn);
+
+        assignmentList.appendChild(assignmentItem);
+    });
+}
+
+displayAssignments();

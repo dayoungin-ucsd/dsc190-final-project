@@ -180,3 +180,70 @@ h1 {
 .delete-btn:hover {
     background-color: #ffdede;
 }
+
+#assignment-form {
+    margin-bottom: 20px;
+}
+
+#assignment-form label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+#assignment-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dcdfea;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.assignment-item {
+    padding: 15px;
+    margin-top: 10px;
+    background-color: #f7f8fc;
+    border-radius: 8px;
+}
+
+.assignment-item strong {
+    color: #6254d8;
+}
+
+.assignment-item p {
+    margin-top: 6px;
+    color: #555b70;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.progress-btn {
+    margin-top: 10px;
+    margin-right: 10px;
+    padding: 6px 12px;
+    background-color: #eeebff;
+    color: #6254d8;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.progress-btn:hover {
+    background-color: #ded8ff;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #e8eaf2;
+    border-radius: 10px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #7161e8;
+    border-radius: 10px;
+}
