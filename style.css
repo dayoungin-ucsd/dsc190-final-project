@@ -262,3 +262,23 @@ h1 {
     color: #3a9b72 !important;
     font-weight: bold;
 }
+
+#study-settings {
+    margin-bottom: 20px;
+}
+
+#study-settings label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #555b70;
+}
+
+#study-settings input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dcdfea;
+    border-radius: 8px;
+    font-size: 14px;
+}

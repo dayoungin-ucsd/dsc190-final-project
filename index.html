@@ -210,13 +210,26 @@
                 <h1>Daily Planner</h1>
                 <p class="subtitle">Generate your personalized study plan.</p>
 
+                <div class="card" id="study-settings">
+                    <h3>Available Study Time</h3>
+
+                    <label for="study-start">Start Time</label>
+                    <input type="time" id="study-start" value="09:00">
+
+                    <label for="study-end">End Time</label>
+                    <input type="time" id="study-end" value="22:00">
+                </div>
+
+                <button class="primary-btn" id="generate-plan-btn">
+                    Generate Today's Plan
+                </button>
+
                 <div class="card">
                     <h3>Today's Study Plan</h3>
-                    <p>Your generated daily plan will appear here.</p>
 
-                    <button class="primary-btn">
-                        ✨ Generate Today's Plan
-                    </button>
+                    <div id="study-plan-list">
+                        <p>No study plan generated yet.</p>
+                    </div>
                 </div>
             </section>
 

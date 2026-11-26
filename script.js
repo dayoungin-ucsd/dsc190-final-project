@@ -413,3 +413,122 @@ function displayUpcomingDeadlines() {
 
 displayEvents();
 displayAssignments();
+
+const generatePlanBtn = document.getElementById("generate-plan-btn");
+
+generatePlanBtn.addEventListener("click", () => {
+    const startTime = document.getElementById("study-start").value;
+    const endTime = document.getElementById("study-end").value;
+
+    if (!startTime || !endTime) {
+        alert("Please select your available study time.");
+        return;
+    }
+
+    if (endTime <= startTime) {
+        alert("End time must be after start time.");
+        return;
+    }
+
+    const availableSlots = getAvailableStudySlots(startTime, endTime);
+
+    const prioritizedAssignments = getPrioritizedAssignments();
+
+    console.log("Prioritized Assignments:", prioritizedAssignments);
+
+    const planList = document.getElementById("study-plan-list");
+    planList.innerHTML = "";
+
+    if (availableSlots.length === 0) {
+        planList.textContent = "No available study time today.";
+        return;
+    }
+
+    const heading = document.createElement("h4");
+    heading.textContent = "Available Study Slots";
+    planList.appendChild(heading);
+
+    availableSlots.forEach((slot) => {
+        const slotItem = document.createElement("p");
+        slotItem.textContent = `${slot.start} - ${slot.end}`;
+        planList.appendChild(slotItem);
+    });
+});
+
+function getAvailableStudySlots(startTime, endTime) {
+    const days = [
+        "Sunday", "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday"
+    ];
+
+    const today = days[new Date().getDay()];
+
+    const todaysEvents = events
+        .filter((event) => event.day === today)
+        .sort((a, b) => a.start.localeCompare(b.start));
+
+    const availableSlots = [];
+    let currentTime = startTime;
+
+    todaysEvents.forEach((event) => {
+        // Ignore events outside the available study hours
+        if (event.end <= startTime || event.start >= endTime) {
+            return;
+        }
+
+        // Save free time before the next event
+        if (event.start > currentTime) {
+            availableSlots.push({
+                start: currentTime,
+                end: event.start < endTime ? event.start : endTime
+            });
+        }
+
+        // Move forward to the end of the event
+        if (event.end > currentTime) {
+            currentTime = event.end;
+        }
+    });
+
+    // Save any remaining free time
+    if (currentTime < endTime) {
+        availableSlots.push({
+            start: currentTime,
+            end: endTime
+        });
+    }
+
+    return availableSlots;
+}
+
+function getPrioritizedAssignments() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const prioritizedAssignments = assignments
+        .filter((assignment) => assignment.progress < 100)
+        .map((assignment) => {
+            const dueDate = new Date(assignment.due + "T00:00:00");
+
+            const daysLeft = Math.round(
+                (dueDate - today) / (1000 * 60 * 60 * 24)
+            );
+
+            const remainingHours =
+                assignment.hours * (1 - assignment.progress / 100);
+
+            const urgency = Math.max(daysLeft + 1, 1);
+
+            const priorityScore = remainingHours / urgency;
+
+            return {
+                ...assignment,
+                daysLeft: daysLeft,
+                remainingHours: remainingHours,
+                priorityScore: priorityScore
+            };
+        })
+        .sort((a, b) => b.priorityScore - a.priorityScore);
+
+    return prioritizedAssignments;
+}
