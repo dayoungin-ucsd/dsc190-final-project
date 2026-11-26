@@ -160,6 +160,7 @@ function displayAssignments() {
 
     if (assignments.length === 0) {
         assignmentList.textContent = "No assignments added yet.";
+        updateDashboard();
         return;
     }
 
@@ -270,6 +271,20 @@ function displayAssignments() {
 
         assignmentList.appendChild(assignmentItem);
     });
+
+    updateDashboard();
 }
 
 displayAssignments();
+
+function updateDashboard() {
+    const pendingCount = document.getElementById("pending-count");
+
+    const pendingAssignments = assignments.filter((assignment) => {
+        return assignment.progress < 100;
+    });
+
+    pendingCount.textContent = pendingAssignments.length;
+}
+
+updateDashboard();
