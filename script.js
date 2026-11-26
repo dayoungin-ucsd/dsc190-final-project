@@ -116,8 +116,6 @@ function displayEvents() {
     displayTodaySchedule();
 }
 
-displayEvents();
-
 const addAssignmentBtn = document.getElementById("add-assignment-btn");
 const assignmentForm = document.getElementById("assignment-form");
 
@@ -281,8 +279,6 @@ function displayAssignments() {
     displayUpcomingDeadlines();
 }
 
-displayAssignments();
-
 function updateDashboard() {
     const pendingCount = document.getElementById("pending-count");
 
@@ -415,6 +411,5 @@ function displayUpcomingDeadlines() {
     });
 }
 
-updateDashboard();
-displayTodaySchedule();
-displayUpcomingDeadlines();
+displayEvents();
+displayAssignments();
