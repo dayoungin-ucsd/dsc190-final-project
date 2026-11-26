@@ -8,6 +8,10 @@ Try Smart Study Planner here:
 
 https://dayoungin-ucsd.github.io/dsc190-final-project/
 
+## GitHub Repository
+
+Source code:
+https://github.com/dayoungin-ucsd/dsc190-final-project
 
 ## Project Overview
 
@@ -96,6 +100,42 @@ The daily planner uses a rule-based scheduling algorithm:
 6. Select available study hours.
 7. Click the Generate Plan button.
 8. Adjust study and break durations in Settings.
+
+### Example: Planning a Study Day
+
+Suppose a student has the following schedule and assignments:
+
+**Weekly Schedule:**
+- Lecture: Monday, 10:00 AM – 11:00 AM
+- Lab: Monday, 2:00 PM – 3:00 PM
+
+**Assignments:**
+- Math Homework: Due in 2 days, 3 hours remaining
+- Research Paper: Due in 5 days, 6 hours remaining
+- Programming Project: Due in 7 days, 4 hours remaining
+
+The student opens the Daily Planner and sets their available
+study time from 9:00 AM to 6:00 PM.
+
+The Smart Study Planner then:
+
+1. Identifies available study periods between scheduled events.
+2. Prioritizes assignments based on deadlines and remaining work.
+3. Generates study sessions without overlapping lectures or labs.
+4. Inserts breaks according to the user's settings.
+5. Displays the total scheduled study time and number of sessions.
+
+For example, with 60-minute study sessions and 10-minute breaks,
+the planner may generate a schedule like:
+
+- 9:00 AM – 10:00 AM: Math Homework
+- 10:00 AM – 11:00 AM: Lecture (existing event)
+- 11:00 AM – 12:00 PM: Research Paper
+- 12:00 PM – 12:10 PM: Break
+- 12:10 PM – 1:10 PM: Research Paper
+
+The exact generated plan depends on the current day,
+existing events, assignment priorities, and user settings.
 
 ## Data Storage
 
