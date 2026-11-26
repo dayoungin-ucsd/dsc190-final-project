@@ -285,6 +285,18 @@ function updateDashboard() {
     });
 
     pendingCount.textContent = pendingAssignments.length;
+
+    const remainingHours = document.getElementById("remaining-hours");
+
+    let totalHours = 0;
+
+    assignments.forEach((assignment) => {
+        const remaining = assignment.hours * (1 - assignment.progress / 100);
+
+        totalHours += remaining;
+    });
+
+    remainingHours.textContent = totalHours.toFixed(1);
 }
 
 updateDashboard();
