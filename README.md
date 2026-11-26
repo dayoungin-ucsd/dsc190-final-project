@@ -15,6 +15,23 @@ College students often struggle to balance classes, assignments, and study time.
 
 Smart Study Planner helps students manage their academic responsibilities by combining weekly scheduling, assignment tracking, and automatic daily study planning in one application.
 
+## Screenshots
+
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### Weekly Schedule
+![Weekly Schedule](screenshots/weekly-schedule.png)
+
+### Assignments
+![Assignments](screenshots/assignments.png)
+
+### Daily Planner
+![Daily Planner](screenshots/daily-planner.png)
+
+### Settings
+![Settings](screenshots/settings.png)
+
 ## Features
 
 ### 1. Dashboard
