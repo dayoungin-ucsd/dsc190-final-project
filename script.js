@@ -431,28 +431,52 @@ generatePlanBtn.addEventListener("click", () => {
     }
 
     const availableSlots = getAvailableStudySlots(startTime, endTime);
-
     const prioritizedAssignments = getPrioritizedAssignments();
 
-    console.log("Prioritized Assignments:", prioritizedAssignments);
+    const studyPlan = generateStudyPlan(
+        availableSlots,
+        prioritizedAssignments
+    );
 
     const planList = document.getElementById("study-plan-list");
     planList.innerHTML = "";
+
+    document.getElementById("study-summary").hidden = true;
 
     if (availableSlots.length === 0) {
         planList.textContent = "No available study time today.";
         return;
     }
 
-    const heading = document.createElement("h4");
-    heading.textContent = "Available Study Slots";
-    planList.appendChild(heading);
+    if (prioritizedAssignments.length === 0) {
+        planList.textContent = "No pending assignments to schedule.";
+        return;
+    }
 
-    availableSlots.forEach((slot) => {
-        const slotItem = document.createElement("p");
-        slotItem.textContent = `${slot.start} - ${slot.end}`;
-        planList.appendChild(slotItem);
+    studyPlan.forEach((session) => {
+        const sessionItem = document.createElement("div");
+        sessionItem.className = "event-item";
+
+        const title = document.createElement("strong");
+        title.textContent = session.name;
+
+        const details = document.createElement("p");
+
+        if (session.type === "break") {
+            details.textContent =
+                `${session.start} - ${session.end} | ${session.duration} min break`;
+        } else {
+            details.textContent =
+                `${session.start} - ${session.end} | ${session.course} | ${session.duration} min`;
+        }
+
+        sessionItem.appendChild(title);
+        sessionItem.appendChild(details);
+
+        planList.appendChild(sessionItem);
     });
+
+    displayStudySummary(studyPlan);
 });
 
 function getAvailableStudySlots(startTime, endTime) {
@@ -531,4 +555,120 @@ function getPrioritizedAssignments() {
         .sort((a, b) => b.priorityScore - a.priorityScore);
 
     return prioritizedAssignments;
+}
+
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(":").map(Number);
+
+    return hours * 60 + minutes;
+}
+
+function minutesToTime(totalMinutes) {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function generateStudyPlan(availableSlots, prioritizedAssignments) {
+    const studyPlan = [];
+
+    const STUDY_DURATION = 90;
+    const BREAK_DURATION = 15;
+
+    // Copy assignments so original data is not changed
+    const tasks = prioritizedAssignments.map((assignment) => ({
+        ...assignment,
+        remainingMinutes: Math.ceil(assignment.remainingHours * 60)
+    }));
+
+    for (const slot of availableSlots) {
+        let currentTime = timeToMinutes(slot.start);
+        const slotEnd = timeToMinutes(slot.end);
+
+        for (const task of tasks) {
+            while (task.remainingMinutes > 0 && currentTime < slotEnd) {
+                const availableMinutes = slotEnd - currentTime;
+
+                const sessionMinutes = Math.min(
+                    STUDY_DURATION,
+                    task.remainingMinutes,
+                    availableMinutes
+                );
+
+                studyPlan.push({
+                    type: "study",
+                    name: task.name,
+                    course: task.course,
+                    start: minutesToTime(currentTime),
+                    end: minutesToTime(currentTime + sessionMinutes),
+                    duration: sessionMinutes
+                });
+
+                currentTime += sessionMinutes;
+                task.remainingMinutes -= sessionMinutes;
+
+                // Add a break after a full 90-minute study session
+                // only if there is more work to schedule.
+                const hasRemainingWork = tasks.some(
+                    (item) => item.remainingMinutes > 0
+                );
+
+                if (
+                    sessionMinutes === STUDY_DURATION &&
+                    hasRemainingWork &&
+                    currentTime + BREAK_DURATION < slotEnd
+                ) {
+                    studyPlan.push({
+                        type: "break",
+                        name: "Break ☕",
+                        start: minutesToTime(currentTime),
+                        end: minutesToTime(currentTime + BREAK_DURATION),
+                        duration: BREAK_DURATION
+                    });
+
+                    currentTime += BREAK_DURATION;
+                }
+            }
+
+            if (currentTime >= slotEnd) {
+                break;
+            }
+        }
+    }
+
+    return studyPlan;
+}
+
+function displayStudySummary(studyPlan) {
+    const summary = document.getElementById("study-summary");
+
+    const studySessions = studyPlan.filter(
+        (session) => session.type === "study"
+    );
+
+    const breakSessions = studyPlan.filter(
+        (session) => session.type === "break"
+    );
+
+    const totalStudyMinutes = studySessions.reduce(
+        (total, session) => total + session.duration,
+        0
+    );
+
+    const totalBreakMinutes = breakSessions.reduce(
+        (total, session) => total + session.duration,
+        0
+    );
+
+    document.getElementById("total-study-time").textContent =
+        `${(totalStudyMinutes / 60).toFixed(1)} hours`;
+
+    document.getElementById("study-session-count").textContent =
+        studySessions.length;
+
+    document.getElementById("total-break-time").textContent =
+        `${totalBreakMinutes} minutes`;
+
+    summary.hidden = false;
 }
