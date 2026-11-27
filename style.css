@@ -2065,3 +2065,19 @@ button.daily-timetable-block:hover {
         flex-wrap: wrap;
     }
 }
+
+.availability-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.availability-save-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}

@@ -1220,7 +1220,7 @@ function loadAvailabilityDraft() {
     } else {
         availabilityDraft = {};
         excludedWeeklyDraft = [];
-    }const availabilityGrid = document.getElementById("availability-grid");
+    }
 
     if (savedPlan) {
         studyStartInput.value = savedPlan.startTime || studyStartInput.value;
@@ -1605,6 +1605,16 @@ saveAvailabilityBtn.addEventListener("click", () => {
 
     updateAvailabilitySummary();
     closeAvailabilityEditor();
+
+    const dateString = studyDateInput.value;
+
+    if (savedPlans[dateString]) {
+        planMessage.textContent =
+            "Availability saved! Click Generate & Save Plan to update your study schedule.";
+    } else {
+        planMessage.textContent =
+            "Availability saved successfully!";
+    }
 });
 
 cancelAvailabilityBtn.addEventListener("click", () => {
