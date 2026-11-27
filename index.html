@@ -84,15 +84,33 @@
             </section>
 
             <section id="schedule" class="page">
-                <h1>Weekly Schedule</h1>
-                <p class="subtitle">Manage your recurring classes and events.</p>
+                <div class="schedule-header">
+                    <div>
+                        <h1>Weekly Schedule</h1>
+                        <p class="subtitle">
+                            Organize your weekly classes, work, and personal events.
+                        </p>
+                    </div>
 
-                <button type="button" class="primary-btn" id="add-event-btn">
-                    + Add Event
-                </button>
+                    <div class="schedule-header-actions">
+                        <button type="button" class="secondary-btn" id="manage-categories-btn">
+                            🎨 Manage Categories
+                        </button>
+
+                        <button type="button" class="primary-btn" id="add-event-btn">
+                            + Add Event
+                        </button>
+                    </div>
+                </div>
 
                 <form id="event-form" class="card" hidden>
-                    <h3>Add New Event</h3>
+                    <div class="form-header">
+                        <h3 id="event-form-title">Add New Event</h3>
+
+                        <button type="button" class="close-btn" id="cancel-event-btn">
+                            ✕
+                        </button>
+                    </div>
 
                     <label for="event-name">Event Name</label>
                     <input
@@ -103,36 +121,190 @@
                     >
 
                     <label>Select Days</label>
+
                     <div class="day-checkbox-group">
-                        <label><input type="checkbox" name="event-days" value="Monday"> Monday</label>
-                        <label><input type="checkbox" name="event-days" value="Tuesday"> Tuesday</label>
-                        <label><input type="checkbox" name="event-days" value="Wednesday"> Wednesday</label>
-                        <label><input type="checkbox" name="event-days" value="Thursday"> Thursday</label>
-                        <label><input type="checkbox" name="event-days" value="Friday"> Friday</label>
-                        <label><input type="checkbox" name="event-days" value="Saturday"> Saturday</label>
-                        <label><input type="checkbox" name="event-days" value="Sunday"> Sunday</label>
+                        <label>
+                            <input type="checkbox" name="event-days" value="Monday">
+                            Monday
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="event-days" value="Tuesday">
+                            Tuesday
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="event-days" value="Wednesday">
+                            Wednesday
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="event-days" value="Thursday">
+                            Thursday
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="event-days" value="Friday">
+                            Friday
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="event-days" value="Saturday">
+                            Saturday
+                        </label>
+
+                        <label>
+                            <input type="checkbox" name="event-days" value="Sunday">
+                            Sunday
+                        </label>
                     </div>
 
-                    <label for="event-start">Start Time</label>
-                    <input type="time" id="event-start" required>
+                    <div class="event-time-grid">
+                        <div>
+                            <label for="event-start">Start Time</label>
+                            <input type="time" id="event-start" required>
+                        </div>
 
-                    <label for="event-end">End Time</label>
-                    <input type="time" id="event-end" required>
+                        <div>
+                            <label for="event-end">End Time</label>
+                            <input type="time" id="event-end" required>
+                        </div>
+                    </div>
 
                     <label for="event-category">Category</label>
-                    <select id="event-category">
+                    <select id="event-category" required>
                         <option value="Class">Class</option>
                         <option value="Work">Work</option>
                         <option value="Personal">Personal</option>
                     </select>
 
-                    <button type="submit" class="primary-btn">
-                        Save Event
-                    </button>
+                    <div class="event-form-actions">
+                        <button type="submit" class="primary-btn" id="save-event-btn">
+                            Save Event
+                        </button>
+
+                        <button type="button" class="delete-btn" id="delete-event-btn" hidden>
+                            Delete Event
+                        </button>
+
+                        <button type="button" class="secondary-btn" id="cancel-event-form-btn">
+                            Cancel
+                        </button>
+                    </div>
                 </form>
 
+                <div id="category-manager" class="card" hidden>
+                    <div class="form-header">
+                        <h3>Manage Categories</h3>
+
+                        <button type="button" class="close-btn" id="close-categories-btn">
+                            ✕
+                        </button>
+                    </div>
+
+                    <p class="helper-text">
+                        Add custom categories and choose colors for your weekly schedule.
+                    </p>
+
+                    <div id="category-list"></div>
+
+                    <form id="category-form">
+                        <h4 id="category-form-title">Add New Category</h4>
+
+                        <label for="category-name">Category Name</label>
+                        <input
+                            type="text"
+                            id="category-name"
+                            placeholder="e.g. Study Group"
+                            required
+                        >
+
+                        <label for="category-color">Category Color</label>
+                        <div class="category-color-input">
+                            <input
+                                type="color"
+                                id="category-color"
+                                value="#7161e8"
+                            >
+
+                            <span id="category-color-value">#7161e8</span>
+                        </div>
+
+                        <div class="category-form-actions">
+                            <button type="submit" class="primary-btn" id="save-category-btn">
+                                Add Category
+                            </button>
+
+                            <button type="button" class="secondary-btn" id="cancel-category-btn" hidden>
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card timetable-card">
+                    <div class="timetable-header">
+                        <div>
+                            <h3>My Weekly Timetable</h3>
+                            <p class="helper-text">
+                                Click an event to edit its details.
+                            </p>
+                        </div>
+
+                        <div class="timetable-legend" id="timetable-legend"></div>
+                    </div>
+
+                    <div class="timetable-scroll">
+                        <div class="weekly-timetable" id="weekly-timetable">
+                            <div class="timetable-time-column" id="timetable-time-column"></div>
+
+                            <div class="timetable-day-column" data-day="Monday">
+                                <div class="timetable-day-header">Mon</div>
+                                <div class="timetable-day-events" id="timetable-monday"></div>
+                            </div>
+
+                            <div class="timetable-day-column" data-day="Tuesday">
+                                <div class="timetable-day-header">Tue</div>
+                                <div class="timetable-day-events" id="timetable-tuesday"></div>
+                            </div>
+
+                            <div class="timetable-day-column" data-day="Wednesday">
+                                <div class="timetable-day-header">Wed</div>
+                                <div class="timetable-day-events" id="timetable-wednesday"></div>
+                            </div>
+
+                            <div class="timetable-day-column" data-day="Thursday">
+                                <div class="timetable-day-header">Thu</div>
+                                <div class="timetable-day-events" id="timetable-thursday"></div>
+                            </div>
+
+                            <div class="timetable-day-column" data-day="Friday">
+                                <div class="timetable-day-header">Fri</div>
+                                <div class="timetable-day-events" id="timetable-friday"></div>
+                            </div>
+
+                            <div class="timetable-day-column" data-day="Saturday">
+                                <div class="timetable-day-header">Sat</div>
+                                <div class="timetable-day-events" id="timetable-saturday"></div>
+                            </div>
+
+                            <div class="timetable-day-column" data-day="Sunday">
+                                <div class="timetable-day-header">Sun</div>
+                                <div class="timetable-day-events" id="timetable-sunday"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="timetable-empty" id="timetable-empty" hidden>
+                        No events scheduled yet. Add an event to get started!
+                    </p>
+                </div>
+
                 <div class="card">
-                    <h3>Your Weekly Schedule</h3>
+                    <h3>All Events</h3>
+                    <p class="helper-text">
+                        View and manage all your recurring weekly events.
+                    </p>
 
                     <div id="event-list">
                         No recurring events added yet.

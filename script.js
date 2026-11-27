@@ -74,22 +74,202 @@ function loadStoredObject(key) {
 const addEventBtn = document.getElementById("add-event-btn");
 const eventForm = document.getElementById("event-form");
 const eventList = document.getElementById("event-list");
+const cancelEventBtn = document.getElementById("cancel-event-btn");
+const cancelEventFormBtn = document.getElementById("cancel-event-form-btn");
+const deleteEventBtn = document.getElementById("delete-event-btn");
+const eventFormTitle = document.getElementById("event-form-title");
+const saveEventBtn = document.getElementById("save-event-btn");
+
+const manageCategoriesBtn = document.getElementById("manage-categories-btn");
+const categoryManager = document.getElementById("category-manager");
+const closeCategoriesBtn = document.getElementById("close-categories-btn");
+const categoryList = document.getElementById("category-list");
+const categoryForm = document.getElementById("category-form");
+const categoryFormTitle = document.getElementById("category-form-title");
+const categoryNameInput = document.getElementById("category-name");
+const categoryColorInput = document.getElementById("category-color");
+const categoryColorValue = document.getElementById("category-color-value");
+const saveCategoryBtn = document.getElementById("save-category-btn");
+const cancelCategoryBtn = document.getElementById("cancel-category-btn");
+
+const timetableTimeColumn = document.getElementById("timetable-time-column");
+const timetableLegend = document.getElementById("timetable-legend");
+const timetableEmpty = document.getElementById("timetable-empty");
+
+const TIMETABLE_START = 7;
+const TIMETABLE_END = 23;
+const HOUR_HEIGHT = 64;
 
 let events = loadStoredArray("events");
+let categories = loadStoredArray("eventCategories");
+let editingEventId = null;
+let editingCategoryId = null;
+
+const defaultCategories = [
+    { id: "class", name: "Class", color: "#7161e8" },
+    { id: "work", name: "Work", color: "#3a9b72" },
+    { id: "personal", name: "Personal", color: "#e58ba6" }
+];
+
+if (categories.length === 0 && localStorage.getItem("eventCategories") === null) {
+    categories = defaultCategories;
+    localStorage.setItem("eventCategories", JSON.stringify(categories));
+}
+
+let eventsChanged = false;
+
+events.forEach((event) => {
+    if (!event.id) {
+        event.id = createId();
+        eventsChanged = true;
+    }
+
+    if (!event.groupId) {
+        event.groupId = event.id;
+        eventsChanged = true;
+    }
+});
+
+if (eventsChanged) {
+    localStorage.setItem("events", JSON.stringify(events));
+}
+
+function saveEvents() {
+    localStorage.setItem("events", JSON.stringify(events));
+    displayEvents();
+}
+
+function saveCategories() {
+    localStorage.setItem("eventCategories", JSON.stringify(categories));
+    displayCategories();
+    updateCategoryOptions();
+    displayEvents();
+}
+
+function getCategory(name) {
+    return categories.find((category) => category.name === name);
+}
+
+function getCategoryColor(name) {
+    return getCategory(name)?.color || "#85899c";
+}
+
+function getCategoryBackground(color) {
+    const hex = color.replace("#", "");
+
+    if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+        return "#f1f2f6";
+    }
+
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+
+    return `rgba(${r}, ${g}, ${b}, 0.16)`;
+}
+
+function updateCategoryOptions() {
+    const select = document.getElementById("event-category");
+    const selectedValue = select.value;
+
+    select.innerHTML = "";
+
+    const uncategorizedOption = document.createElement("option");
+    uncategorizedOption.value = "Uncategorized";
+    uncategorizedOption.textContent = "Uncategorized";
+    select.appendChild(uncategorizedOption);
+
+    categories.forEach((category) => {
+        const option = document.createElement("option");
+        option.value = category.name;
+        option.textContent = category.name;
+        select.appendChild(option);
+    });
+
+    if ([...select.options].some((option) => option.value === selectedValue)) {
+        select.value = selectedValue;
+    } else if (categories.length > 0) {
+        select.value = categories[0].name;
+    }
+}
+
+function getSelectedEventDays() {
+    return [...document.querySelectorAll('input[name="event-days"]:checked')]
+        .map((checkbox) => checkbox.value);
+}
+
+function setSelectedEventDays(selectedDays) {
+    document.querySelectorAll('input[name="event-days"]').forEach((checkbox) => {
+        checkbox.checked = selectedDays.includes(checkbox.value);
+    });
+}
+
+function resetEventForm() {
+    eventForm.reset();
+    editingEventId = null;
+    eventFormTitle.textContent = "Add New Event";
+    saveEventBtn.textContent = "Save Event";
+    deleteEventBtn.hidden = true;
+    updateCategoryOptions();
+}
+
+function closeEventForm() {
+    eventForm.hidden = true;
+    resetEventForm();
+}
+
+function openAddEventForm() {
+    resetEventForm();
+    eventForm.hidden = false;
+    eventForm.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function openEditEventForm(eventId) {
+    const event = events.find((item) => item.id === eventId);
+
+    if (!event) {
+        return;
+    }
+
+    editingEventId = event.id;
+
+    const groupEvents = events.filter(
+        (item) => item.groupId === event.groupId
+    );
+
+    document.getElementById("event-name").value = event.name;
+    document.getElementById("event-start").value = event.start;
+    document.getElementById("event-end").value = event.end;
+
+    updateCategoryOptions();
+    document.getElementById("event-category").value = event.category;
+
+    setSelectedEventDays(groupEvents.map((item) => item.day));
+
+    eventFormTitle.textContent = "Edit Event";
+    saveEventBtn.textContent = "Save Changes";
+    deleteEventBtn.hidden = false;
+    eventForm.hidden = false;
+
+    eventForm.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 addEventBtn.addEventListener("click", () => {
-    eventForm.hidden = !eventForm.hidden;
+    if (eventForm.hidden) {
+        openAddEventForm();
+    } else {
+        closeEventForm();
+    }
 });
+
+cancelEventBtn.addEventListener("click", closeEventForm);
+cancelEventFormBtn.addEventListener("click", closeEventForm);
 
 eventForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
     const name = document.getElementById("event-name").value.trim();
-
-    const selectedDays = Array.from(
-        document.querySelectorAll('input[name="event-days"]:checked')
-    ).map((checkbox) => checkbox.value);
-
+    const selectedDays = getSelectedEventDays();
     const start = document.getElementById("event-start").value;
     const end = document.getElementById("event-end").value;
     const category = document.getElementById("event-category").value;
@@ -99,9 +279,21 @@ eventForm.addEventListener("submit", (e) => {
         return;
     }
 
+    if (start < "07:00" || end > "23:00") {
+        alert("Please choose a time between 7:00 AM and 11:00 PM.");
+        return;
+    }
+
+    const originalEvent = editingEventId
+        ? events.find((event) => event.id === editingEventId)
+        : null;
+
+    const groupId = originalEvent?.groupId || createId();
+
     const conflictingDays = selectedDays.filter((day) => {
         return events.some((event) => {
             return (
+                event.groupId !== groupId &&
                 event.day === day &&
                 start < event.end &&
                 end > event.start
@@ -111,28 +303,168 @@ eventForm.addEventListener("submit", (e) => {
 
     if (conflictingDays.length > 0) {
         alert(
-            `This event overlaps with an existing event on: ${conflictingDays.join(", ")}.`
+            `This event overlaps with another event on: ${conflictingDays.join(", ")}.`
         );
         return;
     }
 
-    selectedDays.forEach((day) => {
-        events.push({
+    const existingGroupEvents = events.filter(
+        (event) => event.groupId === groupId
+    );
+
+    const updatedGroupEvents = selectedDays.map((day) => {
+        const existing = existingGroupEvents.find((event) => event.day === day);
+
+        return {
+            id: existing?.id || createId(),
+            groupId,
             name,
             day,
             start,
             end,
             category
-        });
+        };
     });
 
-    localStorage.setItem("events", JSON.stringify(events));
+    events = events
+        .filter((event) => event.groupId !== groupId)
+        .concat(updatedGroupEvents);
 
-    displayEvents();
-
-    eventForm.reset();
-    eventForm.hidden = true;
+    saveEvents();
+    closeEventForm();
 });
+
+deleteEventBtn.addEventListener("click", () => {
+    const event = events.find((item) => item.id === editingEventId);
+
+    if (!event) {
+        return;
+    }
+
+    if (!confirm(`Delete "${event.name}" from all selected days?`)) {
+        return;
+    }
+
+    events = events.filter((item) => item.groupId !== event.groupId);
+    saveEvents();
+    closeEventForm();
+});
+
+function displayTimetableTimeLabels() {
+    timetableTimeColumn.innerHTML = "";
+
+    const header = document.createElement("div");
+    header.className = "timetable-time-header";
+    timetableTimeColumn.appendChild(header);
+
+    const labels = document.createElement("div");
+    labels.className = "timetable-time-labels";
+
+    for (let hour = TIMETABLE_START; hour <= TIMETABLE_END; hour++) {
+        const label = document.createElement("div");
+        label.className = "timetable-time-label";
+
+        const displayHour = hour % 12 || 12;
+        const period = hour < 12 ? "AM" : "PM";
+
+        label.textContent = `${displayHour} ${period}`;
+        label.style.top = `${(hour - TIMETABLE_START) * HOUR_HEIGHT}px`;
+
+        labels.appendChild(label);
+    }
+
+    timetableTimeColumn.appendChild(labels);
+}
+
+function displayTimetableLegend() {
+    timetableLegend.innerHTML = "";
+
+    categories.forEach((category) => {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+
+        const dot = document.createElement("span");
+        dot.className = "legend-dot";
+        dot.style.backgroundColor = category.color;
+
+        const name = document.createElement("span");
+        name.textContent = category.name;
+
+        item.appendChild(dot);
+        item.appendChild(name);
+        timetableLegend.appendChild(item);
+    });
+}
+
+function displayWeeklyTimetable() {
+    document.querySelectorAll(".timetable-day-events").forEach((column) => {
+        column.innerHTML = "";
+    });
+
+    timetableEmpty.hidden = events.length > 0;
+
+    events.forEach((event) => {
+        const columnId = `timetable-${event.day.toLowerCase()}`;
+        const column = document.getElementById(columnId);
+
+        if (!column) {
+            return;
+        }
+
+        const startMinutes = timeToMinutes(event.start);
+        const endMinutes = timeToMinutes(event.end);
+        const timetableStartMinutes = TIMETABLE_START * 60;
+        const timetableEndMinutes = TIMETABLE_END * 60;
+
+        const visibleStart = Math.max(startMinutes, timetableStartMinutes);
+        const visibleEnd = Math.min(endMinutes, timetableEndMinutes);
+
+        if (visibleEnd <= visibleStart) {
+            return;
+        }
+
+        const top = (visibleStart - timetableStartMinutes) / 60 * HOUR_HEIGHT;
+        const height = (visibleEnd - visibleStart) / 60 * HOUR_HEIGHT;
+
+        const color = getCategoryColor(event.category);
+
+        const eventBlock = document.createElement("button");
+        eventBlock.type = "button";
+        eventBlock.className = "timetable-event";
+        eventBlock.style.top = `${top}px`;
+        eventBlock.style.height = `${height}px`;
+        eventBlock.style.setProperty("--event-color", color);
+        eventBlock.style.setProperty(
+            "--event-background",
+            getCategoryBackground(color)
+        );
+
+        const title = document.createElement("span");
+        title.className = "timetable-event-title";
+        title.textContent = event.name;
+
+        const time = document.createElement("span");
+        time.className = "timetable-event-time";
+        time.textContent = `${event.start} - ${event.end}`;
+
+        const category = document.createElement("span");
+        category.className = "timetable-event-category";
+        category.textContent = event.category;
+
+        eventBlock.appendChild(title);
+        eventBlock.appendChild(time);
+        eventBlock.appendChild(category);
+
+        eventBlock.title =
+            `${event.name}\n${event.day}\n${event.start} - ${event.end}\n${event.category}`;
+
+        eventBlock.addEventListener("click", () => {
+            openEditEventForm(event.id);
+        });
+
+        column.appendChild(eventBlock);
+    });
+}
 
 function displayEvents() {
     eventList.innerHTML = "";
@@ -140,9 +472,21 @@ function displayEvents() {
     if (events.length === 0) {
         eventList.textContent = "No recurring events added yet.";
     } else {
-        events.forEach((event, index) => {
-            const eventItem = document.createElement("div");
-            eventItem.className = "event-item";
+        const sortedEvents = [...events].sort((a, b) => {
+            const dayDifference = days.indexOf(a.day) - days.indexOf(b.day);
+
+            return dayDifference || a.start.localeCompare(b.start);
+        });
+
+        sortedEvents.forEach((event) => {
+            const item = document.createElement("div");
+            item.className = "event-list-item";
+
+            const color = getCategoryColor(event.category);
+            item.style.setProperty("--event-color", color);
+
+            const info = document.createElement("div");
+            info.className = "event-list-info";
 
             const title = document.createElement("strong");
             title.textContent = event.name;
@@ -151,27 +495,227 @@ function displayEvents() {
             details.textContent =
                 `${event.day} | ${event.start} - ${event.end} | ${event.category}`;
 
-            const deleteBtn = document.createElement("button");
-            deleteBtn.type = "button";
-            deleteBtn.textContent = "Delete";
-            deleteBtn.className = "delete-btn";
+            info.appendChild(title);
+            info.appendChild(details);
 
-            deleteBtn.addEventListener("click", () => {
-                events.splice(index, 1);
-                localStorage.setItem("events", JSON.stringify(events));
-                displayEvents();
+            const actions = document.createElement("div");
+            actions.className = "event-list-actions";
+
+            const editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "progress-btn";
+            editBtn.textContent = "Edit";
+            editBtn.addEventListener("click", () => {
+                openEditEventForm(event.id);
             });
 
-            eventItem.appendChild(title);
-            eventItem.appendChild(details);
-            eventItem.appendChild(deleteBtn);
-            eventList.appendChild(eventItem);
+            const deleteBtn = document.createElement("button");
+            deleteBtn.type = "button";
+            deleteBtn.className = "delete-btn";
+            deleteBtn.textContent = "Delete";
+
+            deleteBtn.addEventListener("click", () => {
+                if (!confirm(`Delete "${event.name}" on ${event.day}?`)) {
+                    return;
+                }
+
+                events = events.filter((item) => item.id !== event.id);
+                saveEvents();
+            });
+
+            actions.appendChild(editBtn);
+            actions.appendChild(deleteBtn);
+
+            item.appendChild(info);
+            item.appendChild(actions);
+
+            eventList.appendChild(item);
         });
     }
 
+    displayWeeklyTimetable();
+    displayTimetableLegend();
     updateDashboard();
     displayTodaySchedule();
 }
+
+function displayCategories() {
+    categoryList.innerHTML = "";
+
+    if (categories.length === 0) {
+        categoryList.textContent = "No categories added yet.";
+        return;
+    }
+
+    categories.forEach((category) => {
+        const item = document.createElement("div");
+        item.className = "category-item";
+
+        const info = document.createElement("div");
+        info.className = "category-info";
+
+        const dot = document.createElement("span");
+        dot.className = "category-color-dot";
+        dot.style.backgroundColor = category.color;
+
+        const name = document.createElement("span");
+        name.className = "category-name";
+        name.textContent = category.name;
+
+        info.appendChild(dot);
+        info.appendChild(name);
+
+        const actions = document.createElement("div");
+        actions.className = "category-actions";
+
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "progress-btn";
+        editBtn.textContent = "Edit";
+
+        editBtn.addEventListener("click", () => {
+            editingCategoryId = category.id;
+            categoryNameInput.value = category.name;
+            categoryColorInput.value = category.color;
+            categoryColorValue.textContent = category.color;
+            categoryFormTitle.textContent = "Edit Category";
+            saveCategoryBtn.textContent = "Save Changes";
+            cancelCategoryBtn.hidden = false;
+
+            categoryForm.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "delete-btn";
+        deleteBtn.textContent = "Delete";
+
+        deleteBtn.addEventListener("click", () => {
+            if (!confirm(`Delete category "${category.name}"? Events will be kept.`)) {
+                return;
+            }
+
+            events.forEach((event) => {
+                if (event.category === category.name) {
+                    event.category = "Uncategorized";
+                }
+            });
+
+            categories = categories.filter((item) => item.id !== category.id);
+
+            saveEvents();
+            saveCategories();
+            resetCategoryForm();
+        });
+
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        item.appendChild(info);
+        item.appendChild(actions);
+
+        categoryList.appendChild(item);
+    });
+}
+
+function resetCategoryForm() {
+    categoryForm.reset();
+    editingCategoryId = null;
+    categoryColorInput.value = "#7161e8";
+    categoryColorValue.textContent = "#7161e8";
+    categoryFormTitle.textContent = "Add New Category";
+    saveCategoryBtn.textContent = "Add Category";
+    cancelCategoryBtn.hidden = true;
+}
+
+manageCategoriesBtn.addEventListener("click", () => {
+    categoryManager.hidden = !categoryManager.hidden;
+
+    if (!categoryManager.hidden) {
+        displayCategories();
+        categoryManager.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
+});
+
+closeCategoriesBtn.addEventListener("click", () => {
+    categoryManager.hidden = true;
+    resetCategoryForm();
+});
+
+cancelCategoryBtn.addEventListener("click", resetCategoryForm);
+
+categoryColorInput.addEventListener("input", () => {
+    categoryColorValue.textContent = categoryColorInput.value;
+});
+
+categoryForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = categoryNameInput.value.trim();
+    const color = categoryColorInput.value;
+
+    if (!name) {
+        alert("Please enter a category name.");
+        return;
+    }
+
+    if (name.toLowerCase() === "uncategorized") {
+        alert('"Uncategorized" is a reserved category name.');
+        return;
+    }
+
+    const duplicate = categories.some((category) => {
+        return (
+            category.name.toLowerCase() === name.toLowerCase() &&
+            category.id !== editingCategoryId
+        );
+    });
+
+    if (duplicate) {
+        alert("A category with this name already exists.");
+        return;
+    }
+
+    if (editingCategoryId) {
+        const category = categories.find(
+            (item) => item.id === editingCategoryId
+        );
+
+        if (category) {
+            const oldName = category.name;
+
+            category.name = name;
+            category.color = color;
+
+            events.forEach((event) => {
+                if (event.category === oldName) {
+                    event.category = name;
+                }
+            });
+
+            saveEvents();
+        }
+    } else {
+        categories.push({
+            id: createId(),
+            name,
+            color
+        });
+    }
+
+    saveCategories();
+    resetCategoryForm();
+});
+
+displayTimetableTimeLabels();
+updateCategoryOptions();
+displayCategories();
 
 const addAssignmentBtn = document.getElementById("add-assignment-btn");
 const assignmentForm = document.getElementById("assignment-form");
