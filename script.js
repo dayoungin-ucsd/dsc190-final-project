@@ -59,7 +59,7 @@ function loadStoredArray(key) {
     }
 }
 
-function loadStoredObject(key) {
+function loadStoredObject(key) { 
     try {
         const value = JSON.parse(localStorage.getItem(key));
 
@@ -1081,11 +1081,7 @@ const backToPlansBtn = document.getElementById("back-to-plans-btn");
 
 const availabilityCard = document.querySelector(".daily-availability-card");
 const availabilitySummaryText = document.getElementById("availability-summary-text");
-const editAvailabilityBtn = document.getElementById("edit-availability-btn");
 const saveAvailabilityBtn = document.getElementById("save-availability-btn");
-const cancelAvailabilityBtn = document.getElementById("cancel-availability-btn");
-
-let availabilitySnapshot = null;
 
 const availabilityGrid = document.getElementById("availability-grid");
 const clearUnavailableBtn = document.getElementById("clear-unavailable-btn");
@@ -1333,6 +1329,7 @@ function displayDailyWeeklyEvents() {
             }
 
             displayAvailabilityGrid();
+            updateAvailabilitySummary();
         });
 
         label.appendChild(checkbox);
@@ -1555,11 +1552,14 @@ applyUnavailableReasonBtn.addEventListener("click", () => {
 
     displayAvailabilityGrid();
 });
+
 function updateAvailabilitySummary() {
     const dateString = studyDateInput.value;
 
     if (!dateString) {
-        availabilitySummaryText.textContent = "Select a date first.";
+        if (availabilitySummaryText) {
+            availabilitySummaryText.textContent = "Select a date first.";
+        }
         return;
     }
 
@@ -1570,22 +1570,20 @@ function updateAvailabilitySummary() {
         excludedWeeklyDraft
     ).length;
 
-    availabilitySummaryText.textContent =
-        `${studyStartInput.value} - ${studyEndInput.value} | ` +
-        `${unavailableCount} unavailable blocks | ` +
-        `${weeklyCount} weekly events`;
+    if (availabilitySummaryText) {
+        availabilitySummaryText.textContent =
+            `${studyStartInput.value} - ${studyEndInput.value} | ` +
+            `${unavailableCount} unavailable blocks | ` +
+            `${weeklyCount} weekly events`;
+    }
 }
 
 function openAvailabilityEditor() {
-    availabilitySnapshot = {
-        unavailableBlocks: JSON.parse(JSON.stringify(availabilityDraft)),
-        excludedWeeklyEvents: [...excludedWeeklyDraft]
-    };
-
     availabilityCard.hidden = false;
 
     displayDailyWeeklyEvents();
     displayAvailabilityGrid();
+    updateAvailabilitySummary();
 
     availabilityCard.scrollIntoView({
         behavior: "smooth",
@@ -1593,22 +1591,32 @@ function openAvailabilityEditor() {
     });
 }
 
-function closeAvailabilityEditor() {
-    availabilityCard.hidden = true;
-    availabilitySnapshot = null;
+function refreshAvailabilityEditor() {
+    loadAvailabilityDraft();
+
+    availabilityCard.hidden = false;
+
+    displayDailyWeeklyEvents();
+    displayAvailabilityGrid();
+    updateAvailabilitySummary();
 }
 
-editAvailabilityBtn.addEventListener("click", openAvailabilityEditor);
-
 saveAvailabilityBtn.addEventListener("click", () => {
+    const dateString = studyDateInput.value;
+    const startTime = studyStartInput.value;
+    const endTime = studyEndInput.value;
+
+    if (!dateString || !startTime || !endTime || endTime <= startTime) {
+        alert("Please select a valid date and study time range.");
+        return;
+    }
+
     saveAvailabilityDraft();
 
     selectedUnavailableBlocks.clear();
 
+    displayAvailabilityGrid();
     updateAvailabilitySummary();
-    closeAvailabilityEditor();
-
-    const dateString = studyDateInput.value;
 
     if (savedPlans[dateString]) {
         planMessage.textContent =
@@ -1618,26 +1626,6 @@ saveAvailabilityBtn.addEventListener("click", () => {
             "Availability saved successfully!";
     }
 });
-
-cancelAvailabilityBtn.addEventListener("click", () => {
-    if (availabilitySnapshot) {
-        availabilityDraft = availabilitySnapshot.unavailableBlocks;
-        excludedWeeklyDraft = availabilitySnapshot.excludedWeeklyEvents;
-    }
-
-    selectedUnavailableBlocks.clear();
-
-    updateAvailabilitySummary();
-    closeAvailabilityEditor();
-});
-
-function refreshAvailabilityEditor() {
-    loadAvailabilityDraft();
-    displayDailyWeeklyEvents();
-    displayAvailabilityGrid();
-    updateAvailabilitySummary();
-    closeAvailabilityEditor();
-}
 
 studyDateInput.addEventListener("change", () => {
     planMessage.textContent = "";
@@ -1914,17 +1902,21 @@ generatePlanBtn.addEventListener("click", () => {
         return;
     }
 
+    saveAvailabilityDraft();
+
     savedPlans[dateString] = {
         date: dateString,
         startTime,
         endTime,
-        unavailableBlocks: { ...availabilityDraft },
+        unavailableBlocks: JSON.parse(JSON.stringify(availabilityDraft)),
         excludedWeeklyEvents: [...excludedWeeklyDraft],
         sessions,
         notes: ""
     };
 
     saveDailyPlans();
+
+    selectedUnavailableBlocks.clear();
 
     planMessage.textContent = `Study plan saved for ${dateString}!`;
 
@@ -2013,7 +2005,11 @@ editPlanAvailabilityBtn.addEventListener("click", () => {
 
     studyDateInput.value = dateString;
     refreshAvailabilityEditor();
-    openAvailabilityEditor();
+
+    availabilityCard.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
 });
 
 function displayStudySummary(sessions) {

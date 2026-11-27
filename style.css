@@ -2549,3 +2549,380 @@ button.daily-timetable-block:hover {
         padding: 4px 6px;
     }
 }
+
+#planner-home .planner-setup-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+    gap: 20px;
+    align-items: start;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+#planner-home .planner-setup-left,
+#planner-home .planner-setup-right {
+    min-width: 0;
+}
+
+#planner-home .planner-setup-left {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#planner-home .planner-setup-left .planner-controls,
+#planner-home .planner-setup-left .daily-weekly-events-card,
+#planner-home .planner-setup-right .daily-availability-card {
+    width: 100%;
+    margin: 0;
+}
+
+#planner-home .planner-controls {
+    min-width: 0;
+}
+
+#planner-home .planner-controls h3 {
+    margin-bottom: 20px;
+    color: #555b70;
+    font-size: 16px;
+}
+
+#planner-home .planner-controls label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+}
+
+#planner-home .planner-controls input {
+    width: 100%;
+    min-width: 0;
+}
+
+#planner-home .planner-controls .time-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 5px;
+}
+
+#planner-home .planner-controls .time-grid > div {
+    min-width: 0;
+}
+
+#planner-home .planner-controls .planner-generate-actions {
+    margin: 24px 0 0;
+}
+
+#planner-home .planner-controls #generate-plan-btn {
+    width: 100%;
+    margin: 0;
+    padding: 13px 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#planner-home .planner-controls #plan-message {
+    margin-top: 12px;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+#planner-home .daily-weekly-events-card {
+    min-width: 0;
+}
+
+#planner-home .daily-weekly-events-card h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+#planner-home .daily-weekly-events-card > .helper-text {
+    margin-top: 0;
+    margin-bottom: 18px;
+    line-height: 1.6;
+}
+
+#planner-home #daily-weekly-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+    color: #555b70;
+}
+
+#planner-home .daily-weekly-event-item {
+    margin-top: 0;
+    padding: 14px;
+    gap: 12px;
+    min-width: 0;
+}
+
+#planner-home .daily-weekly-event-info {
+    min-width: 0;
+}
+
+#planner-home .daily-weekly-event-info strong {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+#planner-home .daily-weekly-event-info p {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#planner-home .daily-weekly-event-toggle {
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+#planner-home .daily-weekly-event-toggle input {
+    width: 17px;
+    height: 17px;
+}
+
+#planner-home .planner-setup-right .daily-availability-card {
+    min-width: 0;
+}
+
+#planner-home .daily-availability-card .availability-header {
+    margin-bottom: 16px;
+}
+
+#planner-home .daily-availability-card .availability-header h3 {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+#planner-home .daily-availability-card .availability-header .helper-text {
+    margin-top: 0;
+    line-height: 1.6;
+}
+
+#planner-home .availability-inline-summary {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #6254d8;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+#planner-home .daily-availability-card .availability-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin: 18px 0;
+}
+
+#planner-home .daily-availability-card .availability-legend-item {
+    font-size: 12px;
+}
+
+#planner-home .daily-availability-card .availability-grid-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: 1px solid #e8eaf2;
+    border-radius: 10px;
+}
+
+#planner-home .daily-availability-card .availability-grid-header,
+#planner-home .daily-availability-card .availability-grid-row {
+    display: grid;
+    grid-template-columns: 64px repeat(6, minmax(45px, 1fr));
+    min-width: 334px;
+}
+
+#planner-home .daily-availability-card .availability-grid-header {
+    background-color: #f5f3ff;
+}
+
+#planner-home .daily-availability-card .availability-grid-header span {
+    padding: 11px 3px;
+    font-size: 11px;
+    text-align: center;
+}
+
+#planner-home .daily-availability-card .availability-grid-header span:first-child {
+    padding-left: 9px;
+    text-align: left;
+}
+
+#planner-home .daily-availability-card .availability-hour-label {
+    padding: 8px 6px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+#planner-home .daily-availability-card .availability-cell {
+    min-width: 0;
+    min-height: 40px;
+    padding: 0;
+}
+
+#planner-home .daily-availability-card .availability-cell .cell-reason {
+    padding: 2px;
+    font-size: 9px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+#planner-home .daily-availability-card .availability-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+#planner-home .daily-availability-card .availability-actions button {
+    margin: 0;
+    font-size: 12px;
+    padding: 10px 14px;
+}
+
+#planner-home .daily-availability-card .availability-reason-section {
+    margin-top: 22px;
+    padding-top: 20px;
+}
+
+#planner-home .daily-availability-card .availability-reason-section h4 {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+#planner-home .daily-availability-card .availability-reason-section .helper-text {
+    margin-top: 0;
+    margin-bottom: 14px;
+}
+
+#planner-home .daily-availability-card #unavailable-reason {
+    width: 100%;
+    min-width: 0;
+}
+
+#planner-home .daily-availability-card #apply-unavailable-reason-btn {
+    margin-top: 12px;
+    margin-bottom: 0;
+    padding: 10px 14px;
+    font-size: 12px;
+}
+
+#planner-home .daily-availability-card .availability-save-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e8eaf2;
+}
+
+#planner-home .daily-availability-card #save-availability-btn {
+    margin: 0;
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#planner-home .saved-plans-card {
+    width: 100%;
+    margin-top: 20px;
+}
+
+#planner-home .saved-plans-card h3 {
+    font-size: 16px;
+}
+
+@media (max-width: 1200px) {
+    #planner-home .planner-setup-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    #planner-home .planner-setup-left {
+        gap: 20px;
+    }
+
+    #planner-home .daily-availability-card .availability-grid-header,
+    #planner-home .daily-availability-card .availability-grid-row {
+        grid-template-columns: 75px repeat(6, minmax(55px, 1fr));
+        min-width: 405px;
+    }
+}
+
+@media (max-width: 768px) {
+    #planner-home .planner-setup-grid {
+        gap: 16px;
+    }
+
+    #planner-home .planner-setup-left {
+        gap: 16px;
+    }
+
+    #planner-home .daily-availability-card .availability-grid-header,
+    #planner-home .daily-availability-card .availability-grid-row {
+        grid-template-columns: 65px repeat(6, minmax(50px, 1fr));
+        min-width: 365px;
+    }
+
+    #planner-home .daily-weekly-event-item {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    #planner-home .planner-setup-grid {
+        gap: 15px;
+    }
+
+    #planner-home .planner-setup-left {
+        gap: 15px;
+    }
+
+    #planner-home .planner-controls .time-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    #planner-home .daily-weekly-event-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    #planner-home .daily-weekly-event-toggle {
+        margin-top: 4px;
+    }
+
+    #planner-home .daily-availability-card .availability-grid-header,
+    #planner-home .daily-availability-card .availability-grid-row {
+        grid-template-columns: 60px repeat(6, minmax(44px, 1fr));
+        min-width: 324px;
+    }
+
+    #planner-home .daily-availability-card .availability-cell {
+        min-height: 38px;
+    }
+
+    #planner-home .daily-availability-card .availability-actions {
+        justify-content: stretch;
+    }
+
+    #planner-home .daily-availability-card .availability-actions button {
+        width: 100%;
+    }
+
+    #planner-home .daily-availability-card #apply-unavailable-reason-btn {
+        width: 100%;
+    }
+
+    #planner-home .daily-availability-card .availability-save-actions {
+        justify-content: stretch;
+    }
+
+    #planner-home .daily-availability-card #save-availability-btn {
+        width: 100%;
+    }
+}

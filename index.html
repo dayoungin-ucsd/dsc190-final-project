@@ -483,180 +483,177 @@
                         Create and customize your study plans by date.
                     </p>
 
-                    <div class="card planner-controls">
-                        <h3>Create New Plan</h3>
+                    <div class="planner-setup-grid">
+                        <div class="planner-setup-left">
+                            <div class="card planner-controls">
+                                <h3>✨ Create New Plan</h3>
 
-                        <label for="study-date">Study Date</label>
-                        <input type="date" id="study-date" required>
-
-                        <div class="time-grid">
-                            <div>
-                                <label for="study-start">Start Time</label>
+                                <label for="study-date">Study Date</label>
                                 <input
-                                    type="time"
-                                    id="study-start"
-                                    value="09:00"
+                                    type="date"
+                                    id="study-date"
                                     required
                                 >
+
+                                <div class="time-grid">
+                                    <div>
+                                        <label for="study-start">Start Time</label>
+                                        <input
+                                            type="time"
+                                            id="study-start"
+                                            value="09:00"
+                                            required
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label for="study-end">End Time</label>
+                                        <input
+                                            type="time"
+                                            id="study-end"
+                                            value="22:00"
+                                            required
+                                        >
+                                    </div>
+                                </div>
+
+                                <div class="planner-generate-actions">
+                                    <button
+                                        type="button"
+                                        class="primary-btn"
+                                        id="generate-plan-btn"
+                                    >
+                                        Generate &amp; Save Plan
+                                    </button>
+
+                                    <p
+                                        id="plan-message"
+                                        class="status-message"
+                                        role="status"
+                                    ></p>
+                                </div>
                             </div>
 
-                            <div>
-                                <label for="study-end">End Time</label>
-                                <input
-                                    type="time"
-                                    id="study-end"
-                                    value="22:00"
-                                    required
-                                >
-                            </div>
-                        </div>
-                    </div>
+                            <div class="card daily-weekly-events-card">
+                                <h3>📅 Weekly Events for This Day</h3>
 
-                    <div class="card availability-summary-card">
-                        <div class="availability-summary-content">
-                            <div>
-                                <h3>🕒 Available Time</h3>
-                                <p id="availability-summary-text">
-                                    No availability settings saved yet.
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                class="secondary-btn"
-                                id="edit-availability-btn"
-                            >
-                                Edit Available Time
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="card daily-availability-card" hidden>
-                        <div class="availability-header">
-                            <div>
-                                <h3>🕒 Customize Available Time</h3>
                                 <p class="helper-text">
-                                    Click or drag across 10-minute blocks to mark
-                                    times when you cannot study.
+                                    These events are imported from your Weekly Schedule.
+                                    Uncheck an event to ignore it for this date only.
+                                    Your Weekly Schedule will not be changed.
                                 </p>
+
+                                <div id="daily-weekly-events-list">
+                                    No recurring events for this date.
+                                </div>
                             </div>
                         </div>
 
-                        <div class="availability-legend">
-                            <div class="availability-legend-item">
-                                <span class="availability-legend-dot available-dot"></span>
-                                Available
+                        <div class="planner-setup-right">
+                            <div class="card daily-availability-card">
+                                <div class="availability-header">
+                                    <div>
+                                        <h3>🕒 Available Time</h3>
+
+                                        <p class="helper-text">
+                                            Click or drag across 10-minute blocks to mark
+                                            times when you cannot study.
+                                        </p>
+
+                                        <p
+                                            id="availability-summary-text"
+                                            class="availability-inline-summary"
+                                        >
+                                            No availability settings saved yet.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="availability-legend">
+
+                                    <div class="availability-legend-item">
+                                        <span class="availability-legend-dot available-dot"></span>
+                                        Available
+                                    </div>
+
+                                    <div class="availability-legend-item">
+                                        <span class="availability-legend-dot unavailable-dot"></span>
+                                        Unavailable
+                                    </div>
+
+                                    <div class="availability-legend-item">
+                                        <span class="availability-legend-dot weekly-dot"></span>
+                                        Weekly Event
+                                    </div>
+                                </div>
+
+                                <div class="availability-grid-container">
+                                    <div class="availability-grid-header">
+                                        <span>Time</span>
+                                        <span>00</span>
+                                        <span>10</span>
+                                        <span>20</span>
+                                        <span>30</span>
+                                        <span>40</span>
+                                        <span>50</span>
+                                    </div>
+
+                                    <div
+                                        id="availability-grid"
+                                        class="availability-grid"
+                                        aria-label="Select unavailable study times"
+                                    ></div>
+                                </div>
+
+                                <div class="availability-actions">
+                                    <button
+                                        type="button"
+                                        class="secondary-btn"
+                                        id="clear-unavailable-btn"
+                                    >
+                                        Clear Custom Unavailable Times
+                                    </button>
+                                </div>
+
+                                <div class="availability-reason-section">
+
+                                    <h4>Add a Reason (Optional)</h4>
+
+                                    <p class="helper-text">
+                                        Select unavailable blocks, then add a reason
+                                        such as travel, meals, or appointments.
+                                    </p>
+
+                                    <label for="unavailable-reason">
+                                        Reason
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        id="unavailable-reason"
+                                        placeholder="e.g. Travel, Lunch, Appointment"
+                                    >
+
+                                    <button
+                                        type="button"
+                                        class="secondary-btn"
+                                        id="apply-unavailable-reason-btn"
+                                    >
+                                        Apply Reason to Selected Blocks
+                                    </button>
+
+                                </div>
+
+                                <div class="availability-save-actions">
+                                    <button
+                                        type="button"
+                                        class="primary-btn"
+                                        id="save-availability-btn"
+                                    >
+                                        Save Changes
+                                    </button>
+                                </div>
                             </div>
-
-                            <div class="availability-legend-item">
-                                <span class="availability-legend-dot unavailable-dot"></span>
-                                Unavailable
-                            </div>
-
-                            <div class="availability-legend-item">
-                                <span class="availability-legend-dot weekly-dot"></span>
-                                Weekly Event
-                            </div>
                         </div>
-
-                        <div class="availability-grid-container">
-                            <div class="availability-grid-header">
-                                <span>Time</span>
-                                <span>00</span>
-                                <span>10</span>
-                                <span>20</span>
-                                <span>30</span>
-                                <span>40</span>
-                                <span>50</span>
-                            </div>
-
-                            <div
-                                id="availability-grid"
-                                class="availability-grid"
-                                aria-label="Select unavailable study times"
-                            ></div>
-                        </div>
-
-                        <div class="availability-actions">
-                            <button
-                                type="button"
-                                class="secondary-btn"
-                                id="clear-unavailable-btn"
-                            >
-                                Clear Custom Unavailable Times
-                            </button>
-                        </div>
-
-                        <div class="availability-reason-section">
-                            <h4>Add a Reason (Optional)</h4>
-                            <p class="helper-text">
-                                Select unavailable blocks, then add a reason
-                                such as travel, meals, or appointments.
-                            </p>
-
-                            <label for="unavailable-reason">Reason</label>
-                            <input
-                                type="text"
-                                id="unavailable-reason"
-                                placeholder="e.g. Travel, Lunch, Appointment"
-                            >
-
-                            <button
-                                type="button"
-                                class="secondary-btn"
-                                id="apply-unavailable-reason-btn"
-                            >
-                                Apply Reason to Selected Blocks
-                            </button>
-                        </div>
-
-                        <div class="availability-save-actions">
-                            <button
-                                type="button"
-                                class="primary-btn"
-                                id="save-availability-btn"
-                            >
-                                Save Changes
-                            </button>
-
-                            <button
-                                type="button"
-                                class="secondary-btn"
-                                id="cancel-availability-btn"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="card daily-weekly-events-card">
-                        <h3>📅 Weekly Events for This Day</h3>
-
-                        <p class="helper-text">
-                            These events are imported from your Weekly Schedule.
-                            Uncheck an event to ignore it for this date only.
-                            Your Weekly Schedule will not be changed.
-                        </p>
-
-                        <div id="daily-weekly-events-list">
-                            No recurring events for this date.
-                        </div>
-                    </div>
-
-                    <div class="planner-generate-actions">
-                        <button
-                            type="button"
-                            class="primary-btn"
-                            id="generate-plan-btn"
-                        >
-                            Generate &amp; Save Plan
-                        </button>
-
-                        <p
-                            id="plan-message"
-                            class="status-message"
-                            role="status"
-                        ></p>
                     </div>
 
                     <div class="card saved-plans-card">
