@@ -139,8 +139,19 @@ function saveEvents() {
     displayEvents();
 
     if (!plannerHome.hidden) {
+        const currentEventIds = new Set(
+            getWeeklyEventsForDate(studyDateInput.value).map(
+                (event) => event.id
+            )
+        );
+
+        excludedWeeklyDraft = excludedWeeklyDraft.filter(
+            (id) => currentEventIds.has(id)
+        );
+
         displayDailyWeeklyEvents();
         displayAvailabilityGrid();
+        updateAvailabilitySummary();
     }
 }
 
@@ -881,9 +892,21 @@ function displayAssignments() {
         (a, b) => a.due.localeCompare(b.due)
     );
 
-    sortedAssignments.forEach((assignment) => {
+    const inProgress = sortedAssignments.filter(
+        (assignment) => assignment.progress < 100
+    );
+
+    const completed = sortedAssignments.filter(
+        (assignment) => assignment.progress === 100
+    );
+
+    function createAssignmentItem(assignment) {
         const assignmentItem = document.createElement("div");
         assignmentItem.className = "assignment-item";
+
+        if (assignment.progress === 100) {
+            assignmentItem.classList.add("completed");
+        }
 
         const daysLeft = getDaysBetween(
             getLocalDateString(),
@@ -901,23 +924,23 @@ function displayAssignments() {
 
         const deadlineText = document.createElement("p");
 
-        if (daysLeft < 0) {
+        if (assignment.progress === 100) {
+            deadlineText.textContent = "Completed";
+            deadlineText.className = "deadline-safe";
+        } else if (daysLeft < 0) {
             deadlineText.textContent =
                 `${Math.abs(daysLeft)} days overdue`;
+            deadlineText.className = "deadline-urgent";
         } else if (daysLeft === 0) {
             deadlineText.textContent = "Due today!";
+            deadlineText.className = "deadline-urgent";
         } else if (daysLeft === 1) {
             deadlineText.textContent = "1 day left";
-        } else {
-            deadlineText.textContent = `${daysLeft} days left`;
-        }
-
-        if (daysLeft <= 0) {
-            deadlineText.className = "deadline-urgent";
-        } else if (daysLeft <= 6) {
             deadlineText.className = "deadline-soon";
         } else {
-            deadlineText.className = "deadline-safe";
+            deadlineText.textContent = `${daysLeft} days left`;
+            deadlineText.className =
+                daysLeft <= 6 ? "deadline-soon" : "deadline-safe";
         }
 
         const progressBar = document.createElement("div");
@@ -962,8 +985,53 @@ function displayAssignments() {
         assignmentItem.appendChild(progressBtn);
         assignmentItem.appendChild(deleteBtn);
 
-        assignmentList.appendChild(assignmentItem);
-    });
+        return assignmentItem;
+    }
+
+    function createAssignmentSection(title, items, emptyMessage) {
+        const section = document.createElement("section");
+        section.className = "assignment-section";
+
+        const heading = document.createElement("h3");
+        heading.className = "assignment-section-title";
+        heading.textContent = `${title} (${items.length})`;
+
+        section.appendChild(heading);
+
+        if (items.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "assignment-section-empty";
+            empty.textContent = emptyMessage;
+            section.appendChild(empty);
+        } else {
+            const container = document.createElement("div");
+            container.className = "assignment-section-list";
+
+            items.forEach((assignment) => {
+                container.appendChild(createAssignmentItem(assignment));
+            });
+
+            section.appendChild(container);
+        }
+
+        return section;
+    }
+
+    assignmentList.appendChild(
+        createAssignmentSection(
+            "In Progress",
+            inProgress,
+            "No assignments in progress."
+        )
+    );
+
+    assignmentList.appendChild(
+        createAssignmentSection(
+            "Completed",
+            completed,
+            "No completed assignments yet."
+        )
+    );
 
     updateDashboard();
     displayUpcomingDeadlines();
@@ -1219,6 +1287,14 @@ function loadAvailabilityDraft() {
         availabilityDraft = {};
         excludedWeeklyDraft = [];
     }
+
+    const currentEventIds = new Set(
+        getWeeklyEventsForDate(dateString).map((event) => event.id)
+    );
+
+    excludedWeeklyDraft = excludedWeeklyDraft.filter(
+        (id) => currentEventIds.has(id)
+    );
 
     if (savedPlan) {
         studyStartInput.value = savedPlan.startTime || studyStartInput.value;
