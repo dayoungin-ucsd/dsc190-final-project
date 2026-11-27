@@ -46,10 +46,11 @@ Smart Study Planner helps students manage their academic responsibilities by com
 - View upcoming deadlines
 
 ### 2. Weekly Schedule
-- Add recurring weekly events
-- Specify event names, days, times, and categories
+- Add, edit, and delete recurring weekly events
+- Schedule events on multiple days of the week
+- Organize events using customizable categories and colors
 - Prevent overlapping events
-- Delete existing events
+- View events in a visual weekly timetable
 
 ### 3. Assignment Management
 - Add assignments with course names and deadlines
@@ -59,12 +60,19 @@ Smart Study Planner helps students manage their academic responsibilities by com
 - View assignments sorted by deadline
 
 ### 4. Smart Daily Planner
-- Set available study hours
-- Automatically identify free time between scheduled events
-- Prioritize incomplete assignments
-- Generate study sessions based on available time
-- Insert breaks between study sessions
-- Display a daily study summary
+- Select a study date and preferred study hours
+- Customize available time using an interactive 10-minute grid
+- Mark unavailable periods and add optional reasons
+- Automatically exclude recurring weekly events
+- Exclude specific weekly events for individual dates
+- Prioritize incomplete assignments based on deadlines and remaining work
+- Automatically generate study sessions and breaks
+- View generated plans in a visual daily timetable
+- Save and revisit study plans for different dates
+- Add, edit, and delete individual study sessions
+- Mark study sessions as completed
+- Track daily study progress and completion
+- Add notes to individual study sessions and daily plans
 
 ### 5. Customizable Settings
 - Adjust study session duration
@@ -93,13 +101,16 @@ The daily planner uses a rule-based scheduling algorithm:
 ## How to Use
 
 1. Open the application.
-2. Add recurring events in Weekly Schedule.
-3. Add assignments and estimated study hours.
-4. Update assignment progress as work is completed.
-5. Open Daily Planner.
-6. Select available study hours.
-7. Click the Generate Plan button.
-8. Adjust study and break durations in Settings.
+2. Add recurring classes, work, or personal events in Weekly Schedule.
+3. Add assignments with deadlines, estimated hours, and progress.
+4. Open Daily Planner and select a study date.
+5. Set your preferred study start and end times.
+6. Click **Edit Available Time** to mark unavailable periods using the 10-minute grid.
+7. Click **Save Changes** to save your availability settings.
+8. Review the weekly events imported for the selected date.
+9. Click **Generate & Save Plan** to create a personalized study schedule.
+10. Open a saved plan to view its timetable, edit sessions, track completion, and add notes.
+11. Adjust study session and break durations in Settings.
 
 ### Example: Planning a Study Day
 
@@ -139,7 +150,15 @@ existing events, assignment priorities, and user settings.
 
 ## Data Storage
 
-The application uses browser local storage to save events, assignments, and user preferences.
+The application uses browser local storage to save:
+
+- Weekly events and custom categories
+- Assignments and progress
+- Availability preferences for individual dates
+- Generated daily study plans
+- Study session completion status
+- Session notes and daily notes
+- Study and break duration settings
 
 Data is stored locally in the browser and does not require an account.
 
@@ -148,8 +167,3 @@ Data is stored locally in the browser and does not require an account.
 - Data does not automatically sync across devices or browsers.
 - Study plans are generated based on estimated remaining work and deadlines.
 - The application does not currently integrate with external calendars.
-
-## Author
-
-DSC190 Final Project  
-University of California, San Diego
