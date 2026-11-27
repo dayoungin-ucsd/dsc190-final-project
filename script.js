@@ -85,35 +85,45 @@ eventForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
     const name = document.getElementById("event-name").value.trim();
-    const day = document.getElementById("event-day").value;
+
+    const selectedDays = Array.from(
+        document.querySelectorAll('input[name="event-days"]:checked')
+    ).map((checkbox) => checkbox.value);
+
     const start = document.getElementById("event-start").value;
     const end = document.getElementById("event-end").value;
     const category = document.getElementById("event-category").value;
 
-    if (!name || !day || !start || !end || end <= start) {
-        alert("Please enter valid event information.");
+    if (!name || selectedDays.length === 0 || !start || !end || end <= start) {
+        alert("Please enter valid event information and select at least one day.");
         return;
     }
 
-    const hasConflict = events.some((event) => {
-        return (
-            event.day === day &&
-            start < event.end &&
-            end > event.start
-        );
+    const conflictingDays = selectedDays.filter((day) => {
+        return events.some((event) => {
+            return (
+                event.day === day &&
+                start < event.end &&
+                end > event.start
+            );
+        });
     });
 
-    if (hasConflict) {
-        alert("This event overlaps with an existing event.");
+    if (conflictingDays.length > 0) {
+        alert(
+            `This event overlaps with an existing event on: ${conflictingDays.join(", ")}.`
+        );
         return;
     }
 
-    events.push({
-        name,
-        day,
-        start,
-        end,
-        category
+    selectedDays.forEach((day) => {
+        events.push({
+            name,
+            day,
+            start,
+            end,
+            category
+        });
     });
 
     localStorage.setItem("events", JSON.stringify(events));

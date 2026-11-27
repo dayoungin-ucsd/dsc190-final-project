@@ -803,3 +803,42 @@ select,
 #planner-detail[hidden] {
     display: none !important;
 }
+
+.day-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+#event-form .day-checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    padding: 9px 13px;
+    background-color: #f7f8fc;
+    border: 1px solid #dcdfea;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+#event-form .day-checkbox-group label:has(input:checked) {
+    background-color: #eeebff;
+    border-color: #7161e8;
+    color: #6254d8;
+}
+
+#event-form .day-checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    margin: 0;
+    accent-color: #7161e8;
+}
+
+#event-form .primary-btn {
+    margin-top: 24px;
+}

@@ -102,17 +102,16 @@
                         required
                     >
 
-                    <label for="event-day">Day</label>
-                    <select id="event-day" required>
-                        <option value="">Select a day</option>
-                        <option value="Monday">Monday</option>
-                        <option value="Tuesday">Tuesday</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Thursday">Thursday</option>
-                        <option value="Friday">Friday</option>
-                        <option value="Saturday">Saturday</option>
-                        <option value="Sunday">Sunday</option>
-                    </select>
+                    <label>Select Days</label>
+                    <div class="day-checkbox-group">
+                        <label><input type="checkbox" name="event-days" value="Monday"> Monday</label>
+                        <label><input type="checkbox" name="event-days" value="Tuesday"> Tuesday</label>
+                        <label><input type="checkbox" name="event-days" value="Wednesday"> Wednesday</label>
+                        <label><input type="checkbox" name="event-days" value="Thursday"> Thursday</label>
+                        <label><input type="checkbox" name="event-days" value="Friday"> Friday</label>
+                        <label><input type="checkbox" name="event-days" value="Saturday"> Saturday</label>
+                        <label><input type="checkbox" name="event-days" value="Sunday"> Sunday</label>
+                    </div>
 
                     <label for="event-start">Start Time</label>
                     <input type="time" id="event-start" required>
