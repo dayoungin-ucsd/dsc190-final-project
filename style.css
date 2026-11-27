@@ -2081,3 +2081,471 @@ button.daily-timetable-block:hover {
     margin-top: 24px;
     flex-wrap: wrap;
 }
+
+.dashboard-main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.dashboard-timetable-column,
+.dashboard-info-column {
+    min-width: 0;
+}
+
+.dashboard-info-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dashboard-timetable-card {
+    min-width: 0;
+}
+
+.dashboard-timetable-card .dashboard-study-header {
+    margin-bottom: 20px;
+}
+
+.dashboard-timetable-card .daily-timetable-legend {
+    gap: 12px;
+    margin: 18px 0;
+}
+
+.dashboard-timetable-card .availability-legend-item {
+    font-size: 12px;
+}
+
+.dashboard-timetable-scroll {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e8eaf2;
+    border-radius: 10px;
+}
+
+.dashboard-timetable-scroll .daily-timetable {
+    min-width: 0;
+    grid-template-columns: 62px minmax(0, 1fr);
+}
+
+.dashboard-timetable-scroll .daily-timetable-block {
+    left: 5px;
+    width: calc(100% - 10px);
+    padding: 5px 8px;
+}
+
+.dashboard-timetable-scroll .daily-timetable-block-title {
+    font-size: 12px;
+}
+
+.dashboard-timetable-scroll .daily-timetable-block-time {
+    font-size: 10px;
+}
+
+.dashboard-timetable-scroll .daily-time-label {
+    font-size: 11px;
+}
+
+.dashboard-timetable-scroll .daily-timetable-block.compact {
+    padding: 2px 6px;
+}
+
+.dashboard-timetable-scroll .daily-timetable-block.compact
+.daily-timetable-block-title {
+    font-size: 10px;
+}
+
+.dashboard-info-column .card {
+    width: 100%;
+}
+
+.dashboard-info-column .card h3 {
+    margin-bottom: 16px;
+}
+
+.dashboard-info-column #upcoming-deadlines,
+.dashboard-info-column #today-schedule {
+    font-size: 14px;
+}
+
+.planner-main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 20px;
+}
+
+.planner-timetable-column,
+.planner-tasks-column {
+    min-width: 0;
+}
+
+.planner-main-grid > div > .card {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.planner-timetable-column .daily-timetable-card {
+    min-width: 0;
+}
+
+.planner-timetable-column .daily-timetable-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.planner-timetable-column .daily-timetable-header button {
+    align-self: flex-start;
+}
+
+.planner-timetable-column .daily-timetable-legend {
+    gap: 12px;
+    margin: 18px 0;
+}
+
+.planner-timetable-column .availability-legend-item {
+    font-size: 12px;
+}
+
+.planner-timetable-column .daily-timetable {
+    min-width: 0;
+    grid-template-columns: 62px minmax(0, 1fr);
+}
+
+.planner-timetable-column .daily-time-label {
+    font-size: 11px;
+}
+
+.planner-timetable-column .daily-timetable-block {
+    left: 5px;
+    width: calc(100% - 10px);
+    padding: 5px 8px;
+}
+
+.planner-timetable-column .daily-timetable-block-title {
+    font-size: 12px;
+}
+
+.planner-timetable-column .daily-timetable-block-time {
+    font-size: 10px;
+}
+
+.planner-timetable-column .daily-timetable-block.compact {
+    padding: 2px 6px;
+}
+
+.planner-timetable-column .daily-timetable-block.compact
+.daily-timetable-block-title {
+    font-size: 10px;
+}
+
+.daily-timetable {
+    --daily-hour-height: 52px;
+}
+
+.daily-timetable-block {
+    padding: 5px 9px;
+    gap: 1px;
+}
+
+.daily-timetable-block-title {
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.daily-timetable-block-time {
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+.daily-timetable-block.compact {
+    padding: 2px 7px;
+    gap: 5px;
+}
+
+.daily-timetable-block.compact .daily-timetable-block-title {
+    font-size: 10px;
+}
+
+.study-tasks-card {
+    min-width: 0;
+}
+
+.study-tasks-card > h3 {
+    margin-bottom: 6px;
+}
+
+.study-tasks-card > .helper-text {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+#study-plan-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+#study-plan-list > .event-item {
+    margin: 0;
+}
+
+.study-task-card {
+    padding: 18px;
+    background-color: #f8f7ff;
+    border: 1px solid #e7e3ff;
+    border-left: 4px solid #7161e8;
+    border-radius: 10px;
+}
+
+.study-task-card.completed {
+    background-color: #f1faf5;
+    border-color: #d5eee0;
+    border-left-color: #3a9b72;
+}
+
+.study-task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.study-task-title {
+    min-width: 0;
+}
+
+.study-task-title h4 {
+    color: #6254d8;
+    font-size: 15px;
+    margin-bottom: 5px;
+    overflow-wrap: anywhere;
+}
+
+.study-task-course {
+    font-size: 12px;
+    color: #85899c;
+}
+
+.study-task-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.study-task-stat {
+    padding: 11px;
+    background-color: white;
+    border: 1px solid #eceef5;
+    border-radius: 8px;
+}
+
+.study-task-stat-label {
+    display: block;
+    color: #85899c;
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+.study-task-stat-value {
+    display: block;
+    color: #252638;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.study-task-progress {
+    margin-top: 18px;
+}
+
+.study-task-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    color: #555b70;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.study-task-progress-header strong {
+    color: #6254d8;
+}
+
+.study-task-progress .progress-bar {
+    margin-top: 9px;
+}
+
+.study-task-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.study-task-actions button {
+    margin: 0;
+}
+
+.study-task-sessions {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #e8eaf2;
+}
+
+.study-task-sessions summary {
+    color: #6254d8;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+
+.study-task-sessions summary:hover {
+    color: #5948ce;
+}
+
+.study-task-session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.study-task-session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background-color: white;
+    border: 1px solid #eceef5;
+    border-radius: 8px;
+}
+
+.study-task-session-item.completed {
+    background-color: #f1faf5;
+    border-color: #d5eee0;
+}
+
+.study-task-session-item .session-check {
+    margin-top: 0;
+    min-width: 0;
+}
+
+.study-task-session-time {
+    font-size: 12px;
+    color: #555b70;
+}
+
+.study-task-session-item .progress-btn {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.study-task-notes {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #e8eaf2;
+}
+
+.study-task-notes label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555b70;
+}
+
+.study-task-notes textarea {
+    width: 100%;
+    min-height: 85px;
+}
+
+.study-task-notes .primary-btn,
+.study-task-notes .secondary-btn {
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+#daily-notes-card {
+    width: 100%;
+    margin-top: 0;
+}
+
+#daily-notes-card .notes-input {
+    width: 100%;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-main-grid,
+    .planner-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-info-column {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-info-column {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-timetable-card .dashboard-study-header,
+    .planner-timetable-column .daily-timetable-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dashboard-timetable-card .dashboard-study-header button,
+    .planner-timetable-column .daily-timetable-header button {
+        align-self: flex-start;
+    }
+
+    .study-task-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-main-grid,
+    .planner-main-grid {
+        gap: 15px;
+    }
+
+    .study-task-card {
+        padding: 14px;
+    }
+
+    .study-task-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .study-task-session-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .study-task-session-item .progress-btn {
+        align-self: flex-start;
+    }
+
+    .dashboard-timetable-scroll .daily-timetable,
+    .planner-timetable-column .daily-timetable {
+        grid-template-columns: 55px minmax(0, 1fr);
+    }
+
+    .dashboard-timetable-scroll .daily-timetable-block,
+    .planner-timetable-column .daily-timetable-block {
+        left: 4px;
+        width: calc(100% - 8px);
+        padding: 4px 6px;
+    }
+}

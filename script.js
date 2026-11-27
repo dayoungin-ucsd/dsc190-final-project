@@ -1122,6 +1122,8 @@ const dashboardDailyProgress = document.getElementById("dashboard-daily-progress
 const dashboardDailyProgressBar = document.getElementById("dashboard-daily-progress-bar");
 const dashboardDailyProgressFill = document.getElementById("dashboard-daily-progress-fill");
 const dashboardStudySessions = document.getElementById("dashboard-study-sessions");
+const dashboardTimetableTimeColumn = document.getElementById("dashboard-timetable-time-column");
+const dashboardTimetableEvents = document.getElementById("dashboard-timetable-events");
 
 let savedPlans = loadStoredObject("dailyPlans");
 
@@ -1133,7 +1135,7 @@ let selectedUnavailableBlocks = new Set();
 let isDraggingAvailability = false;
 let dragAvailabilityValue = false;
 
-const DAILY_HOUR_HEIGHT = 70;
+const DAILY_HOUR_HEIGHT = 52;
 
 studyDateInput.value = getLocalDateString();
 studyStartInput.value = localStorage.getItem("studyStart") || "09:00";
@@ -2193,95 +2195,118 @@ function displaySavedPlan() {
         `Study Plan — ${activePlanDate}`;
 
     planList.innerHTML = "";
-
     dailyNotesInput.value = plan.notes || "";
 
-    const sortedSessions = [...plan.sessions].sort(
-        (a, b) => a.start.localeCompare(b.start)
-    );
+    if (!plan.topicNotes || typeof plan.topicNotes !== "object") {
+        plan.topicNotes = {};
+    }
 
-    sortedSessions.forEach((session) => {
-        const item = document.createElement("div");
-        item.className = "event-item";
+    const studySessions = getStudySessions(plan.sessions);
+    const groups = new Map();
 
-        if (session.type === "break") {
-            item.classList.add("break-session");
+    studySessions.forEach((session) => {
+        const key = session.assignmentId || `${session.course}-${session.name}`;
 
-            const title = document.createElement("strong");
-            title.textContent = session.name;
-
-            const details = document.createElement("p");
-            details.textContent =
-                `${session.start} - ${session.end} | ${session.duration} min`;
-
-            item.appendChild(title);
-            item.appendChild(details);
-            planList.appendChild(item);
-            return;
+        if (!groups.has(key)) {
+            groups.set(key, []);
         }
 
-        item.classList.add("study-session");
+        groups.get(key).push(session);
+    });
 
-        if (session.completed) {
-            item.classList.add("completed");
-        }
+    if (groups.size === 0) {
+        planList.textContent = "No study tasks found.";
+    }
 
-        const title = document.createElement("strong");
-        title.className = "session-title";
-        title.textContent = session.name;
+    groups.forEach((sessions, assignmentId) => {
+        sessions.sort((a, b) => a.start.localeCompare(b.start));
 
-        const details = document.createElement("p");
-        details.textContent =
-            `${session.start} - ${session.end} | ${session.course} | ${session.duration} min`;
-
-        const editBtn = document.createElement("button");
-        editBtn.type = "button";
-        editBtn.className = "progress-btn";
-        editBtn.textContent = "Edit Session";
-
-        editBtn.addEventListener("click", () => {
-            openEditStudySessionForm(session.id);
-        });
-
-        item.appendChild(title);
-        item.appendChild(details);
-        item.appendChild(editBtn);
-
-        const checkboxLabel = document.createElement("label");
-        checkboxLabel.className = "session-check";
-
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = Boolean(session.completed);
-
-        const checkboxText = document.createElement("span");
-        checkboxText.textContent = "Study session completed";
-
-        checkbox.addEventListener("change", () => {
-            session.completed = checkbox.checked;
-
-            item.classList.toggle("completed", session.completed);
-
-            saveDailyPlans();
-            displayStudySummary(plan.sessions);
-        });
-
-        checkboxLabel.appendChild(checkbox);
-        checkboxLabel.appendChild(checkboxText);
-        item.appendChild(checkboxLabel);
+        const firstSession = sessions[0];
 
         const assignment = assignments.find(
-            (task) => task.id === session.assignmentId
+            (item) => item.id === firstSession.assignmentId
         );
 
+        const totalMinutes = sessions.reduce(
+            (total, session) => total + session.duration,
+            0
+        );
+
+        const completedCount = sessions.filter(
+            (session) => session.completed
+        ).length;
+
+        const allCompleted = completedCount === sessions.length;
+
+        const card = document.createElement("div");
+        card.className = "study-task-card";
+
+        if (allCompleted) {
+            card.classList.add("completed");
+        }
+
+        const header = document.createElement("div");
+        header.className = "study-task-header";
+
+        const titleSection = document.createElement("div");
+        titleSection.className = "study-task-title";
+
+        const title = document.createElement("h4");
+        title.textContent = firstSession.name;
+
+        const course = document.createElement("p");
+        course.className = "study-task-course";
+        course.textContent = firstSession.course || "No course";
+
+        titleSection.appendChild(title);
+        titleSection.appendChild(course);
+        header.appendChild(titleSection);
+        card.appendChild(header);
+
+        const stats = document.createElement("div");
+        stats.className = "study-task-stats";
+
+        const statItems = [
+            ["Study Time", `${(totalMinutes / 60).toFixed(1)} hours`],
+            ["Sessions", String(sessions.length)],
+            ["Completed", `${completedCount}/${sessions.length}`],
+            ["Status", allCompleted ? "Completed" : "In Progress"]
+        ];
+
+        statItems.forEach(([label, value]) => {
+            const stat = document.createElement("div");
+            stat.className = "study-task-stat";
+
+            const statLabel = document.createElement("span");
+            statLabel.className = "study-task-stat-label";
+            statLabel.textContent = label;
+
+            const statValue = document.createElement("strong");
+            statValue.className = "study-task-stat-value";
+            statValue.textContent = value;
+
+            stat.appendChild(statLabel);
+            stat.appendChild(statValue);
+            stats.appendChild(stat);
+        });
+
+        card.appendChild(stats);
+
         const progressSection = document.createElement("div");
-        progressSection.className = "session-progress";
+        progressSection.className = "study-task-progress";
 
         if (assignment) {
+            const progressHeader = document.createElement("div");
+            progressHeader.className = "study-task-progress-header";
+
             const progressLabel = document.createElement("span");
-            progressLabel.className = "session-progress-label";
-            progressLabel.textContent =
-                `Overall Assignment Progress: ${assignment.progress}%`;
+            progressLabel.textContent = "Assignment Progress";
+
+            const progressValue = document.createElement("strong");
+            progressValue.textContent = `${assignment.progress}%`;
+
+            progressHeader.appendChild(progressLabel);
+            progressHeader.appendChild(progressValue);
 
             const progressBar = document.createElement("div");
             progressBar.className = "progress-bar";
@@ -2301,7 +2326,7 @@ function displaySavedPlan() {
                 updateAssignmentProgress(assignment.id);
             });
 
-            progressSection.appendChild(progressLabel);
+            progressSection.appendChild(progressHeader);
             progressSection.appendChild(progressBar);
             progressSection.appendChild(progressBtn);
         } else {
@@ -2313,36 +2338,117 @@ function displaySavedPlan() {
             progressSection.appendChild(missing);
         }
 
-        item.appendChild(progressSection);
+        card.appendChild(progressSection);
+
+        const sessionDetails = document.createElement("details");
+        sessionDetails.className = "study-task-sessions";
+
+        const summary = document.createElement("summary");
+        summary.textContent =
+            `Study Sessions (${completedCount}/${sessions.length} completed)`;
+
+        sessionDetails.appendChild(summary);
+
+        const sessionList = document.createElement("div");
+        sessionList.className = "study-task-session-list";
+
+        sessions.forEach((session) => {
+            const row = document.createElement("div");
+            row.className = "study-task-session-item";
+
+            if (session.completed) {
+                row.classList.add("completed");
+            }
+
+            const label = document.createElement("label");
+            label.className = "session-check";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = Boolean(session.completed);
+
+            const time = document.createElement("span");
+            time.className = "study-task-session-time";
+            time.textContent =
+                `${session.start} - ${session.end} (${session.duration} min)`;
+
+            checkbox.addEventListener("change", () => {
+                session.completed = checkbox.checked;
+
+                row.classList.toggle("completed", session.completed);
+
+                const updatedCount = sessions.filter(
+                    (item) => item.completed
+                ).length;
+
+                const completed = updatedCount === sessions.length;
+
+                card.classList.toggle("completed", completed);
+
+                stats.children[2].querySelector(".study-task-stat-value")
+                    .textContent = `${updatedCount}/${sessions.length}`;
+
+                stats.children[3].querySelector(".study-task-stat-value")
+                    .textContent = completed ? "Completed" : "In Progress";
+
+                summary.textContent =
+                    `Study Sessions (${updatedCount}/${sessions.length} completed)`;
+
+                saveDailyPlans();
+                displayStudySummary(plan.sessions);
+            });
+
+            label.appendChild(checkbox);
+            label.appendChild(time);
+
+            const editBtn = document.createElement("button");
+            editBtn.type = "button";
+            editBtn.className = "progress-btn";
+            editBtn.textContent = "Edit";
+
+            editBtn.addEventListener("click", () => {
+                openEditStudySessionForm(session.id);
+            });
+
+            row.appendChild(label);
+            row.appendChild(editBtn);
+            sessionList.appendChild(row);
+        });
+
+        sessionDetails.appendChild(sessionList);
+        card.appendChild(sessionDetails);
 
         const notesSection = document.createElement("div");
-        notesSection.className = "session-notes";
+        notesSection.className = "study-task-notes";
 
         const notesLabel = document.createElement("label");
-        notesLabel.textContent = "Session Notes";
+        notesLabel.textContent = "📝 Topic Notes";
 
         const notesInput = document.createElement("textarea");
         notesInput.className = "notes-input";
         notesInput.rows = 3;
         notesInput.placeholder =
-            "Add tasks, goals, or reminders for this session...";
-        notesInput.value = session.notes || "";
+            "Add goals, reminders, or notes for this assignment...";
+
+        const existingNotes = sessions
+            .map((session) => (session.notes || "").trim())
+            .filter(Boolean);
+
+        notesInput.value =
+            plan.topicNotes[assignmentId] ??
+            [...new Set(existingNotes)].join("\n\n");
 
         notesInput.addEventListener("input", () => {
-            session.notes = notesInput.value;
+            plan.topicNotes[assignmentId] = notesInput.value;
             saveDailyPlans();
         });
 
         notesSection.appendChild(notesLabel);
         notesSection.appendChild(notesInput);
 
-        item.appendChild(notesSection);
-        planList.appendChild(item);
+        card.appendChild(notesSection);
+        planList.appendChild(card);
     });
-
-    if (plan.sessions.length === 0) {
-        planList.textContent = "No study sessions found.";
-    }
 
     displayStudySummary(plan.sessions);
     displayDailyTimetable();
@@ -2650,6 +2756,105 @@ saveDailyNotesBtn.addEventListener("click", () => {
     notesMessage.textContent = "Notes saved successfully!";
 });
 
+function displayDashboardTimetable() {
+    const today = getLocalDateString();
+    const plan = savedPlans[today];
+
+    dashboardTimetableTimeColumn.innerHTML = "";
+    dashboardTimetableEvents.innerHTML = "";
+
+    if (!plan || !Array.isArray(plan.sessions)) {
+        return;
+    }
+
+    const start = timeToMinutes(plan.startTime);
+    const end = timeToMinutes(plan.endTime);
+    const totalHeight = (end - start) / 60 * DAILY_HOUR_HEIGHT;
+
+    dashboardTimetableTimeColumn.style.height = `${totalHeight}px`;
+    dashboardTimetableEvents.style.height = `${totalHeight}px`;
+
+    const firstHour = Math.ceil(start / 60);
+    const lastHour = Math.floor(end / 60);
+
+    for (let hour = firstHour; hour <= lastHour; hour++) {
+        const label = document.createElement("div");
+        label.className = "daily-time-label";
+
+        const displayHour = hour % 12 || 12;
+        const period = hour < 12 ? "AM" : "PM";
+
+        label.textContent = `${displayHour} ${period}`;
+        label.style.top =
+            `${(hour * 60 - start) / 60 * DAILY_HOUR_HEIGHT}px`;
+
+        dashboardTimetableTimeColumn.appendChild(label);
+    }
+
+    function addDashboardBlock(startTime, endTime, name, type) {
+        const visibleStart = Math.max(timeToMinutes(startTime), start);
+        const visibleEnd = Math.min(timeToMinutes(endTime), end);
+
+        if (visibleEnd <= visibleStart) {
+            return;
+        }
+
+        const top = (visibleStart - start) / 60 * DAILY_HOUR_HEIGHT;
+        const height = (visibleEnd - visibleStart) / 60 * DAILY_HOUR_HEIGHT;
+
+        const block = document.createElement("div");
+        block.className = `daily-timetable-block ${type}`;
+
+        if (height < 40) {
+            block.classList.add("compact");
+        }
+
+        block.style.top = `${top}px`;
+        block.style.height = `${height}px`;
+
+        const title = document.createElement("span");
+        title.className = "daily-timetable-block-title";
+        title.textContent = name;
+
+        const time = document.createElement("span");
+        time.className = "daily-timetable-block-time";
+        time.textContent = `${startTime} - ${endTime}`;
+
+        block.appendChild(title);
+        block.appendChild(time);
+
+        block.title = `${name}\n${startTime} - ${endTime}`;
+
+        dashboardTimetableEvents.appendChild(block);
+    }
+
+    const blockedRanges = getBlockedRanges(
+        today,
+        plan.unavailableBlocks || {},
+        plan.excludedWeeklyEvents || []
+    );
+
+    blockedRanges.forEach((block) => {
+        addDashboardBlock(
+            block.start,
+            block.end,
+            block.name,
+            block.type
+        );
+    });
+
+    [...plan.sessions]
+        .sort((a, b) => a.start.localeCompare(b.start))
+        .forEach((session) => {
+            addDashboardBlock(
+                session.start,
+                session.end,
+                session.name,
+                session.type
+            );
+        });
+}
+
 function displayDashboardStudyPlan() {
     const today = getLocalDateString();
     const plan = savedPlans[today];
@@ -2664,6 +2869,8 @@ function displayDashboardStudyPlan() {
 
     if (!hasPlan) {
         dashboardStudySessions.innerHTML = "";
+        dashboardTimetableTimeColumn.innerHTML = "";
+        dashboardTimetableEvents.innerHTML = "";
         return;
     }
 
@@ -2679,53 +2886,7 @@ function displayDashboardStudyPlan() {
 
     dashboardStudySessions.innerHTML = "";
 
-    const sortedSessions = [...plan.sessions].sort(
-        (a, b) => a.start.localeCompare(b.start)
-    );
-
-    sortedSessions.forEach((session) => {
-        const item = document.createElement("div");
-        item.className = "dashboard-study-session";
-
-        if (session.type === "break") {
-            item.classList.add("break");
-        } else if (session.completed) {
-            item.classList.add("completed");
-        }
-
-        const info = document.createElement("div");
-        info.className = "dashboard-study-session-info";
-
-        const title = document.createElement("strong");
-        title.textContent = session.name;
-
-        const details = document.createElement("p");
-        details.textContent = `${session.start} - ${session.end}`;
-
-        info.appendChild(title);
-        info.appendChild(details);
-
-        const status = document.createElement("span");
-        status.className = "dashboard-study-status";
-
-        if (session.type === "break") {
-            status.textContent = "Break";
-        } else {
-            status.textContent = session.completed
-                ? "✓ Completed"
-                : "Pending";
-        }
-
-        item.appendChild(info);
-        item.appendChild(status);
-
-        dashboardStudySessions.appendChild(item);
-    });
-
-    if (sortedSessions.length === 0) {
-        dashboardStudySessions.textContent =
-            "No study sessions in today's plan.";
-    }
+    displayDashboardTimetable();
 }
 
 dashboardViewPlanBtn.addEventListener("click", () => {
