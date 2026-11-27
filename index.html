@@ -64,6 +64,62 @@
                     </div>
                 </div>
 
+                <div class="card dashboard-study-card">
+                    <div class="dashboard-study-header">
+                        <div>
+                            <h3>📚 Today's Study Plan</h3>
+                            <p class="helper-text" id="dashboard-study-date"></p>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="secondary-btn"
+                            id="dashboard-view-plan-btn"
+                            hidden
+                        >
+                            View Full Plan →
+                        </button>
+                    </div>
+
+                    <div id="dashboard-study-content">
+                        <div id="dashboard-no-plan">
+                            <p>You haven't created a study plan for today yet.</p>
+
+                            <button
+                                type="button"
+                                class="primary-btn"
+                                id="dashboard-create-plan-btn"
+                            >
+                                + Create Today's Plan
+                            </button>
+                        </div>
+
+                        <div id="dashboard-existing-plan" hidden>
+                            <div class="dashboard-study-progress">
+                                <span>Daily Progress</span>
+                                <strong id="dashboard-daily-progress">0%</strong>
+                            </div>
+
+                            <div
+                                class="progress-bar"
+                                id="dashboard-daily-progress-bar"
+                                role="progressbar"
+                                aria-label="Today's study completion"
+                                aria-valuemin="0"
+                                aria-valuemax="100"
+                                aria-valuenow="0"
+                            >
+                                <div
+                                    class="progress-fill"
+                                    id="dashboard-daily-progress-fill"
+                                ></div>
+                            </div>
+
+                            <div id="dashboard-study-sessions"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dashboard-sections">
                     <div class="card">
                         <h3>Today's Schedule</h3>
@@ -386,7 +442,7 @@
                 <div id="planner-home">
                     <h1>Daily Planner</h1>
                     <p class="subtitle">
-                        Create and manage your study plans by date.
+                        Create and customize your study plans by date.
                     </p>
 
                     <div class="card planner-controls">
@@ -398,15 +454,140 @@
                         <div class="time-grid">
                             <div>
                                 <label for="study-start">Start Time</label>
-                                <input type="time" id="study-start" value="09:00">
+                                <input
+                                    type="time"
+                                    id="study-start"
+                                    value="09:00"
+                                    required
+                                >
                             </div>
 
                             <div>
                                 <label for="study-end">End Time</label>
-                                <input type="time" id="study-end" value="22:00">
+                                <input
+                                    type="time"
+                                    id="study-end"
+                                    value="22:00"
+                                    required
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card availability-summary-card">
+                        <div class="availability-summary-content">
+                            <div>
+                                <h3>🕒 Available Time</h3>
+                                <p id="availability-summary-text">
+                                    No availability settings saved yet.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="secondary-btn"
+                                id="edit-availability-btn"
+                            >
+                                Edit Available Time
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card daily-availability-card" hidden>
+                        <div class="availability-header">
+                            <div>
+                                <h3>🕒 Customize Available Time</h3>
+                                <p class="helper-text">
+                                    Click or drag across 10-minute blocks to mark
+                                    times when you cannot study.
+                                </p>
                             </div>
                         </div>
 
+                        <div class="availability-legend">
+                            <div class="availability-legend-item">
+                                <span class="availability-legend-dot available-dot"></span>
+                                Available
+                            </div>
+
+                            <div class="availability-legend-item">
+                                <span class="availability-legend-dot unavailable-dot"></span>
+                                Unavailable
+                            </div>
+
+                            <div class="availability-legend-item">
+                                <span class="availability-legend-dot weekly-dot"></span>
+                                Weekly Event
+                            </div>
+                        </div>
+
+                        <div class="availability-grid-container">
+                            <div class="availability-grid-header">
+                                <span>Time</span>
+                                <span>00</span>
+                                <span>10</span>
+                                <span>20</span>
+                                <span>30</span>
+                                <span>40</span>
+                                <span>50</span>
+                            </div>
+
+                            <div
+                                id="availability-grid"
+                                class="availability-grid"
+                                aria-label="Select unavailable study times"
+                            ></div>
+                        </div>
+
+                        <div class="availability-actions">
+                            <button
+                                type="button"
+                                class="secondary-btn"
+                                id="clear-unavailable-btn"
+                            >
+                                Clear Custom Unavailable Times
+                            </button>
+                        </div>
+
+                        <div class="availability-reason-section">
+                            <h4>Add a Reason (Optional)</h4>
+                            <p class="helper-text">
+                                Select unavailable blocks, then add a reason
+                                such as travel, meals, or appointments.
+                            </p>
+
+                            <label for="unavailable-reason">Reason</label>
+                            <input
+                                type="text"
+                                id="unavailable-reason"
+                                placeholder="e.g. Travel, Lunch, Appointment"
+                            >
+
+                            <button
+                                type="button"
+                                class="secondary-btn"
+                                id="apply-unavailable-reason-btn"
+                            >
+                                Apply Reason to Selected Blocks
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card daily-weekly-events-card">
+                        <h3>📅 Weekly Events for This Day</h3>
+
+                        <p class="helper-text">
+                            These events are imported from your Weekly Schedule.
+                            Uncheck an event to ignore it for this date only.
+                            Your Weekly Schedule will not be changed.
+                        </p>
+
+                        <div id="daily-weekly-events-list">
+                            No recurring events for this date.
+                        </div>
+                    </div>
+
+                    <div class="planner-generate-actions">
                         <button
                             type="button"
                             class="primary-btn"
@@ -424,8 +605,10 @@
 
                     <div class="card saved-plans-card">
                         <h3>📅 My Study Plans</h3>
+
                         <p class="helper-text">
-                            Select a date to view your study sessions and notes.
+                            Select a date to view your study timetable,
+                            sessions, and notes.
                         </p>
 
                         <div id="saved-plans-list">
@@ -443,30 +626,65 @@
                         ← Back to My Study Plans
                     </button>
 
-                    <h1 id="study-plan-heading">Study Plan</h1>
+                    <div class="planner-detail-header">
+                        <div>
+                            <h1 id="study-plan-heading">Study Plan</h1>
+                            <p class="subtitle">
+                                View and customize your daily study schedule.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="secondary-btn"
+                            id="edit-plan-availability-btn"
+                        >
+                            Edit Available Time
+                        </button>
+
+                        <div class="availability-save-actions">
+                            <button
+                                type="button"
+                                class="secondary-btn"
+                                id="cancel-availability-btn"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                type="button"
+                                class="primary-btn"
+                                id="save-availability-btn"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
 
                     <div class="card" id="study-summary" hidden>
                         <h3>Study Summary</h3>
 
-                        <p>
-                            Total Study Time:
-                            <strong id="total-study-time">0 hours</strong>
-                        </p>
+                        <div class="study-summary-grid">
+                            <p>
+                                Total Study Time:
+                                <strong id="total-study-time">0 hours</strong>
+                            </p>
 
-                        <p>
-                            Study Sessions:
-                            <strong id="study-session-count">0</strong>
-                        </p>
+                            <p>
+                                Study Sessions:
+                                <strong id="study-session-count">0</strong>
+                            </p>
 
-                        <p>
-                            Total Break Time:
-                            <strong id="total-break-time">0 minutes</strong>
-                        </p>
+                            <p>
+                                Total Break Time:
+                                <strong id="total-break-time">0 minutes</strong>
+                            </p>
 
-                        <p>
-                            Completed Sessions:
-                            <strong id="completed-session-count">0 / 0</strong>
-                        </p>
+                            <p>
+                                Completed Sessions:
+                                <strong id="completed-session-count">0 / 0</strong>
+                            </p>
+                        </div>
 
                         <p>
                             Daily Completion:
@@ -489,8 +707,151 @@
                         </div>
                     </div>
 
+                    <div class="card daily-timetable-card">
+                        <div class="daily-timetable-header">
+                            <div>
+                                <h3>🗓️ Daily Timetable</h3>
+                                <p class="helper-text">
+                                    Click a study session to edit its details.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                class="secondary-btn"
+                                id="add-study-session-btn"
+                            >
+                                + Add Study Session
+                            </button>
+                        </div>
+
+                        <div class="daily-timetable-legend">
+                            <div class="availability-legend-item">
+                                <span class="availability-legend-dot study-dot"></span>
+                                Study
+                            </div>
+
+                            <div class="availability-legend-item">
+                                <span class="availability-legend-dot break-dot"></span>
+                                Break
+                            </div>
+
+                            <div class="availability-legend-item">
+                                <span class="availability-legend-dot unavailable-dot"></span>
+                                Unavailable
+                            </div>
+
+                            <div class="availability-legend-item">
+                                <span class="availability-legend-dot weekly-dot"></span>
+                                Weekly Event
+                            </div>
+                        </div>
+
+                        <div class="daily-timetable-scroll">
+                            <div id="daily-timetable" class="daily-timetable">
+                                <div
+                                    id="daily-timetable-time-column"
+                                    class="daily-timetable-time-column"
+                                ></div>
+
+                                <div
+                                    id="daily-timetable-events"
+                                    class="daily-timetable-events"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="study-session-form" class="card" hidden>
+                        <div class="form-header">
+                            <h3 id="study-session-form-title">
+                                Add Study Session
+                            </h3>
+
+                            <button
+                                type="button"
+                                class="close-btn"
+                                id="close-study-session-form-btn"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <label for="session-assignment">
+                            Assignment
+                        </label>
+
+                        <select id="session-assignment" required>
+                            <option value="">Select an assignment</option>
+                        </select>
+
+                        <div class="time-grid">
+                            <div>
+                                <label for="session-start-time">
+                                    Start Time
+                                </label>
+
+                                <input
+                                    type="time"
+                                    id="session-start-time"
+                                    required
+                                >
+                            </div>
+
+                            <div>
+                                <label for="session-end-time">
+                                    End Time
+                                </label>
+
+                                <input
+                                    type="time"
+                                    id="session-end-time"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div class="session-form-actions">
+                            <button
+                                type="submit"
+                                class="primary-btn"
+                                id="save-study-session-btn"
+                            >
+                                Save Session
+                            </button>
+
+                            <button
+                                type="button"
+                                class="delete-btn"
+                                id="delete-study-session-btn"
+                                hidden
+                            >
+                                Delete Session
+                            </button>
+
+                            <button
+                                type="button"
+                                class="secondary-btn"
+                                id="cancel-study-session-btn"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+
+                        <p
+                            id="study-session-message"
+                            class="status-message"
+                            role="status"
+                        ></p>
+                    </form>
+
                     <div class="card">
                         <h3>Study Sessions</h3>
+
+                        <p class="helper-text">
+                            Check off completed sessions, update assignment progress,
+                            and add session notes.
+                        </p>
 
                         <div id="study-plan-list">
                             No study sessions found.
@@ -522,7 +883,7 @@
                         ></p>
                     </div>
                 </div>
-                        </section>
+            </section>
 
             <section id="settings" class="page">
                 <h1>Settings</h1>

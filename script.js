@@ -137,6 +137,11 @@ if (eventsChanged) {
 function saveEvents() {
     localStorage.setItem("events", JSON.stringify(events));
     displayEvents();
+
+    if (!plannerHome.hidden) {
+        displayDailyWeeklyEvents();
+        displayAvailabilityGrid();
+    }
 }
 
 function saveCategories() {
@@ -812,7 +817,21 @@ assignmentForm.addEventListener("submit", (e) => {
 function saveAssignments() {
     localStorage.setItem("assignments", JSON.stringify(assignments));
     displayAssignments();
-    displaySavedPlan();
+
+    if (activePlanDate) {
+        const plan = getActivePlan();
+
+        if (plan && dailyNotesInput.value !== (plan.notes || "")) {
+            if (confirm("Save your Daily Notes before refreshing the plan?")) {
+                plan.notes = dailyNotesInput.value;
+                saveDailyPlans();
+            }
+        }
+
+        displaySavedPlan();
+    }
+
+    displayDashboardStudyPlan();
 }
 
 function updateAssignmentProgress(assignmentId) {
@@ -1056,27 +1075,69 @@ const generatePlanBtn = document.getElementById("generate-plan-btn");
 const planList = document.getElementById("study-plan-list");
 const planMessage = document.getElementById("plan-message");
 
+const plannerHome = document.getElementById("planner-home");
+const plannerDetail = document.getElementById("planner-detail");
+const backToPlansBtn = document.getElementById("back-to-plans-btn");
+
+const availabilityCard = document.querySelector(".daily-availability-card");
+const availabilitySummaryText = document.getElementById("availability-summary-text");
+const editAvailabilityBtn = document.getElementById("edit-availability-btn");
+const saveAvailabilityBtn = document.getElementById("save-availability-btn");
+const cancelAvailabilityBtn = document.getElementById("cancel-availability-btn");
+
+let availabilitySnapshot = null;
+
+const availabilityGrid = document.getElementById("availability-grid");
+const clearUnavailableBtn = document.getElementById("clear-unavailable-btn");
+const unavailableReasonInput = document.getElementById("unavailable-reason");
+const applyUnavailableReasonBtn = document.getElementById("apply-unavailable-reason-btn");
+const dailyWeeklyEventsList = document.getElementById("daily-weekly-events-list");
+
+const dailyTimetableTimeColumn = document.getElementById("daily-timetable-time-column");
+const dailyTimetableEvents = document.getElementById("daily-timetable-events");
+const editPlanAvailabilityBtn = document.getElementById("edit-plan-availability-btn");
+
+const addStudySessionBtn = document.getElementById("add-study-session-btn");
+const studySessionForm = document.getElementById("study-session-form");
+const studySessionFormTitle = document.getElementById("study-session-form-title");
+const sessionAssignmentInput = document.getElementById("session-assignment");
+const sessionStartInput = document.getElementById("session-start-time");
+const sessionEndInput = document.getElementById("session-end-time");
+const saveStudySessionBtn = document.getElementById("save-study-session-btn");
+const deleteStudySessionBtn = document.getElementById("delete-study-session-btn");
+const cancelStudySessionBtn = document.getElementById("cancel-study-session-btn");
+const closeStudySessionFormBtn = document.getElementById("close-study-session-form-btn");
+const studySessionMessage = document.getElementById("study-session-message");
+
+const saveDailyNotesBtn = document.getElementById("save-daily-notes-btn");
+const dailyNotesInput = document.getElementById("daily-notes");
+const notesMessage = document.getElementById("notes-message");
+
+const dashboardStudyDate = document.getElementById("dashboard-study-date");
+const dashboardNoPlan = document.getElementById("dashboard-no-plan");
+const dashboardExistingPlan = document.getElementById("dashboard-existing-plan");
+const dashboardViewPlanBtn = document.getElementById("dashboard-view-plan-btn");
+const dashboardCreatePlanBtn = document.getElementById("dashboard-create-plan-btn");
+const dashboardDailyProgress = document.getElementById("dashboard-daily-progress");
+const dashboardDailyProgressBar = document.getElementById("dashboard-daily-progress-bar");
+const dashboardDailyProgressFill = document.getElementById("dashboard-daily-progress-fill");
+const dashboardStudySessions = document.getElementById("dashboard-study-sessions");
+
 let savedPlans = loadStoredObject("dailyPlans");
 
+let activePlanDate = null;
+let editingSessionId = null;
+let availabilityDraft = {};
+let excludedWeeklyDraft = [];
+let selectedUnavailableBlocks = new Set();
+let isDraggingAvailability = false;
+let dragAvailabilityValue = false;
+
+const DAILY_HOUR_HEIGHT = 70;
+
 studyDateInput.value = getLocalDateString();
-
-studyStartInput.value =
-    localStorage.getItem("studyStart") || "09:00";
-
-studyEndInput.value =
-    localStorage.getItem("studyEnd") || "22:00";
-
-studyStartInput.addEventListener("change", () => {
-    localStorage.setItem("studyStart", studyStartInput.value);
-});
-
-studyEndInput.addEventListener("change", () => {
-    localStorage.setItem("studyEnd", studyEndInput.value);
-});
-
-studyDateInput.addEventListener("change", () => {
-    planMessage.textContent = "";
-});
+studyStartInput.value = localStorage.getItem("studyStart") || "09:00";
+studyEndInput.value = localStorage.getItem("studyEnd") || "22:00";
 
 function timeToMinutes(time) {
     const [hours, minutes] = time.split(":").map(Number);
@@ -1093,73 +1154,609 @@ function minutesToTime(totalMinutes) {
     );
 }
 
-function getAvailableStudySlots(startTime, endTime, dateString) {
-    const selectedDay = getDayName(dateString);
+function saveDailyPlans() {
+    localStorage.setItem("dailyPlans", JSON.stringify(savedPlans));
+    displaySavedPlansList();
+    displayDashboardStudyPlan();
+}
 
-    const selectedEvents = events
-        .filter((event) => event.day === selectedDay)
+function getStudySessions(sessions) {
+    return sessions.filter((session) => session.type === "study");
+}
+
+function getPlanCompletion(sessions) {
+    const studySessions = getStudySessions(sessions);
+
+    if (studySessions.length === 0) {
+        return 0;
+    }
+
+    const completed = studySessions.filter(
+        (session) => session.completed
+    ).length;
+
+    return Math.round(completed / studySessions.length * 100);
+}
+
+function getWeeklyEventsForDate(dateString) {
+    const day = getDayName(dateString);
+
+    return events
+        .filter((event) => event.day === day)
         .sort((a, b) => a.start.localeCompare(b.start));
+}
 
-    const availableSlots = [];
-    let currentTime = startTime;
+function getIncludedWeeklyEvents(dateString, excludedIds = []) {
+    return getWeeklyEventsForDate(dateString).filter(
+        (event) => !excludedIds.includes(event.id)
+    );
+}
 
-    selectedEvents.forEach((event) => {
-        if (event.end <= startTime || event.start >= endTime) {
-            return;
+function getAvailabilityStorageKey(dateString) {
+    return `availabilityDraft-${dateString}`;
+}
+
+function loadAvailabilityDraft() {
+    const dateString = studyDateInput.value;
+
+    if (!dateString) {
+        availabilityDraft = {};
+        excludedWeeklyDraft = [];
+        return;
+    }
+
+    const savedPlan = savedPlans[dateString];
+    const storageKey = getAvailabilityStorageKey(dateString);
+    const savedDraft = localStorage.getItem(storageKey);
+
+    if (savedDraft !== null) {
+        const draft = loadStoredObject(storageKey);
+
+        availabilityDraft = { ...(draft.unavailableBlocks || {}) };
+        excludedWeeklyDraft = [...(draft.excludedWeeklyEvents || [])];
+    } else if (savedPlan) {
+        availabilityDraft = { ...(savedPlan.unavailableBlocks || {}) };
+        excludedWeeklyDraft = [...(savedPlan.excludedWeeklyEvents || [])];
+    } else {
+        availabilityDraft = {};
+        excludedWeeklyDraft = [];
+    }const availabilityGrid = document.getElementById("availability-grid");
+
+    if (savedPlan) {
+        studyStartInput.value = savedPlan.startTime || studyStartInput.value;
+        studyEndInput.value = savedPlan.endTime || studyEndInput.value;
+    }
+
+    selectedUnavailableBlocks.clear();
+}
+
+function saveAvailabilityDraft() {
+    const dateString = studyDateInput.value;
+
+    if (!dateString) {
+        return;
+    }
+
+    localStorage.setItem(
+        getAvailabilityStorageKey(dateString),
+        JSON.stringify({
+            unavailableBlocks: availabilityDraft,
+            excludedWeeklyEvents: excludedWeeklyDraft
+        })
+    );
+}
+
+function getWeeklyEventAtTime(start, end, dateString, excludedIds) {
+    return getIncludedWeeklyEvents(dateString, excludedIds).find((event) => {
+        return start < event.end && end > event.start;
+    });
+}
+
+function getBlockStartTimes(startTime, endTime) {
+    const starts = [];
+    const start = timeToMinutes(startTime);
+    const end = timeToMinutes(endTime);
+
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+        return starts;
+    }
+
+    for (
+        let minute = Math.floor(start / 10) * 10;
+        minute < end;
+        minute += 10
+    ) {
+        starts.push(minute);
+    }
+
+    return starts;
+}
+
+function displayDailyWeeklyEvents() {
+    dailyWeeklyEventsList.innerHTML = "";
+
+    const dateString = studyDateInput.value;
+
+    if (!dateString) {
+        dailyWeeklyEventsList.textContent = "Select a date first.";
+        return;
+    }
+
+    const dailyEvents = getWeeklyEventsForDate(dateString);
+
+    if (dailyEvents.length === 0) {
+        dailyWeeklyEventsList.textContent =
+            "No recurring events for this date.";
+        return;
+    }
+
+    dailyEvents.forEach((event) => {
+        const item = document.createElement("div");
+        item.className = "daily-weekly-event-item";
+        item.style.setProperty(
+            "--event-color",
+            getCategoryColor(event.category)
+        );
+
+        const info = document.createElement("div");
+        info.className = "daily-weekly-event-info";
+
+        const title = document.createElement("strong");
+        title.textContent = event.name;
+
+        const details = document.createElement("p");
+        details.textContent =
+            `${event.start} - ${event.end} | ${event.category}`;
+
+        info.appendChild(title);
+        info.appendChild(details);
+
+        const label = document.createElement("label");
+        label.className = "daily-weekly-event-toggle";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = !excludedWeeklyDraft.includes(event.id);
+
+        const text = document.createElement("span");
+        text.textContent = "Include";
+
+        checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+                excludedWeeklyDraft = excludedWeeklyDraft.filter(
+                    (id) => id !== event.id
+                );
+            } else if (!excludedWeeklyDraft.includes(event.id)) {
+                excludedWeeklyDraft.push(event.id);
+            }
+
+            displayAvailabilityGrid();
+        });
+
+        label.appendChild(checkbox);
+        label.appendChild(text);
+
+        item.appendChild(info);
+        item.appendChild(label);
+
+        dailyWeeklyEventsList.appendChild(item);
+    });
+}
+
+function updateAvailabilityCell(cell, blockKey, dateString) {
+    const start = blockKey;
+    const end = minutesToTime(timeToMinutes(start) + 10);
+
+    const weeklyEvent = getWeeklyEventAtTime(
+        start,
+        end,
+        dateString,
+        excludedWeeklyDraft
+    );
+
+    const block = availabilityDraft[blockKey];
+
+    cell.className = "availability-cell";
+    cell.innerHTML = "";
+
+    if (weeklyEvent) {
+        cell.classList.add("weekly-event");
+        cell.title = `${weeklyEvent.name} (${weeklyEvent.start} - ${weeklyEvent.end})`;
+        cell.setAttribute("aria-label", `${start}: ${weeklyEvent.name}`);
+        return;
+    }
+
+    if (block) {
+        cell.classList.add("unavailable");
+        cell.title = block.reason || "Unavailable";
+
+        if (block.reason) {
+            const reason = document.createElement("span");
+            reason.className = "cell-reason";
+            reason.textContent = block.reason;
+            cell.appendChild(reason);
         }
+    } else {
+        cell.title = "Available";
+    }
 
-        const eventStart = event.start > startTime
-            ? event.start
-            : startTime;
+    if (selectedUnavailableBlocks.has(blockKey)) {
+        cell.classList.add("selected");
+    }
 
-        const eventEnd = event.end < endTime
-            ? event.end
-            : endTime;
+    cell.setAttribute(
+        "aria-label",
+        `${start}: ${block ? "Unavailable" : "Available"}`
+    );
+}
 
-        if (eventStart > currentTime) {
-            availableSlots.push({
-                start: currentTime,
-                end: eventStart
+function setAvailabilityBlock(blockKey, unavailable) {
+    const dateString = studyDateInput.value;
+    const blockEnd = minutesToTime(timeToMinutes(blockKey) + 10);
+
+    if (getWeeklyEventAtTime(
+        blockKey,
+        blockEnd,
+        dateString,
+        excludedWeeklyDraft
+    )) {
+        return;
+    }
+
+    if (unavailable) {
+        availabilityDraft[blockKey] = {
+            reason: availabilityDraft[blockKey]?.reason || ""
+        };
+
+        selectedUnavailableBlocks.add(blockKey);
+    } else {
+        delete availabilityDraft[blockKey];
+        selectedUnavailableBlocks.delete(blockKey);
+    }
+
+    const cell = availabilityGrid.querySelector(
+        `[data-time="${blockKey}"]`
+    );
+
+    if (cell) {
+        updateAvailabilityCell(cell, blockKey, dateString);
+    }
+}
+
+function displayAvailabilityGrid() {
+    availabilityGrid.innerHTML = "";
+
+    const dateString = studyDateInput.value;
+    const startTime = studyStartInput.value;
+    const endTime = studyEndInput.value;
+
+    if (!dateString || !startTime || !endTime || endTime <= startTime) {
+        availabilityGrid.textContent =
+            "Please select a valid date and time range.";
+        return;
+    }
+
+    const startMinute = timeToMinutes(startTime);
+    const endMinute = timeToMinutes(endTime);
+
+    const firstHour = Math.floor(startMinute / 60);
+    const lastHour = Math.ceil(endMinute / 60);
+
+    for (let hour = firstHour; hour < lastHour; hour++) {
+        const row = document.createElement("div");
+        row.className = "availability-grid-row";
+
+        const hourLabel = document.createElement("div");
+        hourLabel.className = "availability-hour-label";
+
+        const displayHour = hour % 12 || 12;
+        const period = hour < 12 ? "AM" : "PM";
+
+        hourLabel.textContent = `${displayHour} ${period}`;
+        row.appendChild(hourLabel);
+
+        for (let minute = 0; minute < 60; minute += 10) {
+            const blockMinute = hour * 60 + minute;
+            const blockKey = minutesToTime(blockMinute);
+
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "availability-cell";
+            cell.dataset.time = blockKey;
+
+            const blockEnd = blockMinute + 10;
+
+            if (blockMinute < startMinute || blockEnd > endMinute) {
+                cell.disabled = true;
+                cell.style.backgroundColor = "#f1f2f6";
+                cell.style.cursor = "default";
+                row.appendChild(cell);
+                continue;
+            }
+
+            updateAvailabilityCell(cell, blockKey, dateString);
+
+            cell.addEventListener("pointerdown", (e) => {
+                if (e.button !== 0 || cell.classList.contains("weekly-event")) {
+                    return;
+                }
+
+                e.preventDefault();
+
+                isDraggingAvailability = true;
+                dragAvailabilityValue = !Boolean(availabilityDraft[blockKey]);
+
+                setAvailabilityBlock(blockKey, dragAvailabilityValue);
             });
+
+            cell.addEventListener("pointerenter", () => {
+                if (!isDraggingAvailability) {
+                    return;
+                }
+
+                setAvailabilityBlock(blockKey, dragAvailabilityValue);
+            });
+
+            cell.addEventListener("click", (e) => {
+                if (e.detail === 0) {
+                    setAvailabilityBlock(
+                        blockKey,
+                        !Boolean(availabilityDraft[blockKey])
+                    );
+                }
+            });
+
+            row.appendChild(cell);
         }
 
-        if (eventEnd > currentTime) {
-            currentTime = eventEnd;
+        availabilityGrid.appendChild(row);
+    }
+}
+
+document.addEventListener("pointerup", () => {
+    isDraggingAvailability = false;
+});
+
+document.addEventListener("pointercancel", () => {
+    isDraggingAvailability = false;
+});
+
+availabilityGrid.addEventListener("dragstart", (e) => {
+    e.preventDefault();
+});
+
+availabilityGrid.style.touchAction = "pan-y";
+
+clearUnavailableBtn.addEventListener("click", () => {
+    availabilityDraft = {};
+    selectedUnavailableBlocks.clear();
+
+    displayAvailabilityGrid();
+});
+
+applyUnavailableReasonBtn.addEventListener("click", () => {
+    const reason = unavailableReasonInput.value.trim();
+
+    if (selectedUnavailableBlocks.size === 0) {
+        alert("Please select unavailable blocks first.");
+        return;
+    }
+
+    selectedUnavailableBlocks.forEach((blockKey) => {
+        if (availabilityDraft[blockKey]) {
+            availabilityDraft[blockKey].reason = reason;
         }
     });
 
-    if (currentTime < endTime) {
-        availableSlots.push({
-            start: currentTime,
-            end: endTime
+    selectedUnavailableBlocks.clear();
+    unavailableReasonInput.value = "";
+
+    displayAvailabilityGrid();
+});
+function updateAvailabilitySummary() {
+    const dateString = studyDateInput.value;
+
+    if (!dateString) {
+        availabilitySummaryText.textContent = "Select a date first.";
+        return;
+    }
+
+    const unavailableCount = Object.keys(availabilityDraft).length;
+
+    const weeklyCount = getIncludedWeeklyEvents(
+        dateString,
+        excludedWeeklyDraft
+    ).length;
+
+    availabilitySummaryText.textContent =
+        `${studyStartInput.value} - ${studyEndInput.value} | ` +
+        `${unavailableCount} unavailable blocks | ` +
+        `${weeklyCount} weekly events`;
+}
+
+function openAvailabilityEditor() {
+    availabilitySnapshot = {
+        unavailableBlocks: JSON.parse(JSON.stringify(availabilityDraft)),
+        excludedWeeklyEvents: [...excludedWeeklyDraft]
+    };
+
+    availabilityCard.hidden = false;
+
+    displayDailyWeeklyEvents();
+    displayAvailabilityGrid();
+
+    availabilityCard.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+function closeAvailabilityEditor() {
+    availabilityCard.hidden = true;
+    availabilitySnapshot = null;
+}
+
+editAvailabilityBtn.addEventListener("click", openAvailabilityEditor);
+
+saveAvailabilityBtn.addEventListener("click", () => {
+    saveAvailabilityDraft();
+
+    selectedUnavailableBlocks.clear();
+
+    updateAvailabilitySummary();
+    closeAvailabilityEditor();
+});
+
+cancelAvailabilityBtn.addEventListener("click", () => {
+    if (availabilitySnapshot) {
+        availabilityDraft = availabilitySnapshot.unavailableBlocks;
+        excludedWeeklyDraft = availabilitySnapshot.excludedWeeklyEvents;
+    }
+
+    selectedUnavailableBlocks.clear();
+
+    updateAvailabilitySummary();
+    closeAvailabilityEditor();
+});
+
+function refreshAvailabilityEditor() {
+    loadAvailabilityDraft();
+    displayDailyWeeklyEvents();
+    displayAvailabilityGrid();
+    updateAvailabilitySummary();
+    closeAvailabilityEditor();
+}
+
+studyDateInput.addEventListener("change", () => {
+    planMessage.textContent = "";
+    refreshAvailabilityEditor();
+});
+
+studyStartInput.addEventListener("change", () => {
+    localStorage.setItem("studyStart", studyStartInput.value);
+    displayAvailabilityGrid();
+    updateAvailabilitySummary();
+});
+
+studyEndInput.addEventListener("change", () => {
+    localStorage.setItem("studyEnd", studyEndInput.value);
+    displayAvailabilityGrid();
+    updateAvailabilitySummary();
+});
+
+function mergeUnavailableBlocks(blocks) {
+    const entries = Object.keys(blocks)
+        .filter((key) => blocks[key])
+        .sort((a, b) => a.localeCompare(b));
+
+    const ranges = [];
+
+    entries.forEach((start) => {
+        const end = minutesToTime(timeToMinutes(start) + 10);
+        const reason = blocks[start].reason || "";
+
+        const previous = ranges[ranges.length - 1];
+
+        if (previous && previous.end === start && previous.reason === reason) {
+            previous.end = end;
+        } else {
+            ranges.push({ start, end, reason });
+        }
+    });
+
+    return ranges;
+}
+
+function getBlockedRanges(dateString, unavailableBlocks, excludedIds) {
+    const weeklyRanges = getIncludedWeeklyEvents(
+        dateString,
+        excludedIds
+    ).map((event) => ({
+        start: event.start,
+        end: event.end,
+        type: "weekly",
+        name: event.name,
+        category: event.category
+    }));
+
+    const customRanges = mergeUnavailableBlocks(unavailableBlocks).map(
+        (range) => ({
+            ...range,
+            type: "unavailable",
+            name: range.reason || "Unavailable"
+        })
+    );
+
+    return [...weeklyRanges, ...customRanges];
+}
+
+function getAvailableStudySlots(
+    startTime,
+    endTime,
+    dateString,
+    unavailableBlocks = {},
+    excludedIds = []
+) {
+    const blockedRanges = getBlockedRanges(
+        dateString,
+        unavailableBlocks,
+        excludedIds
+    ).sort((a, b) => a.start.localeCompare(b.start));
+
+    const slots = [];
+    let current = timeToMinutes(startTime);
+    const end = timeToMinutes(endTime);
+
+    blockedRanges.forEach((block) => {
+        const blockStart = Math.max(
+            timeToMinutes(block.start),
+            timeToMinutes(startTime)
+        );
+
+        const blockEnd = Math.min(
+            timeToMinutes(block.end),
+            end
+        );
+
+        if (blockEnd <= current || blockStart >= end) {
+            return;
+        }
+
+        if (blockStart > current) {
+            slots.push({
+                start: minutesToTime(current),
+                end: minutesToTime(blockStart)
+            });
+        }
+
+        current = Math.max(current, blockEnd);
+    });
+
+    if (current < end) {
+        slots.push({
+            start: minutesToTime(current),
+            end: minutesToTime(end)
         });
     }
 
-    return availableSlots;
+    return slots;
 }
 
 function getPrioritizedAssignments(dateString) {
     return assignments
-        .filter((assignment) => {
-            return assignment.progress < 100;
-        })
+        .filter((assignment) => assignment.progress < 100)
         .map((assignment) => {
-            const daysLeft = getDaysBetween(
-                dateString,
-                assignment.due
-            );
+            const daysLeft = getDaysBetween(dateString, assignment.due);
 
             const remainingHours =
                 assignment.hours * (1 - assignment.progress / 100);
 
             const urgency = Math.max(daysLeft + 1, 1);
-            const priorityScore = remainingHours / urgency;
 
             return {
                 ...assignment,
-                daysLeft,
-                remainingHours,
-                priorityScore
+                remainingMinutes: Math.ceil(remainingHours * 60),
+                priorityScore: remainingHours / urgency
             };
         })
         .sort((a, b) => b.priorityScore - a.priorityScore);
@@ -1176,26 +1773,31 @@ function generateStudyPlan(availableSlots, prioritizedAssignments) {
         localStorage.getItem("breakDuration") ?? 15
     );
 
-    const tasks = prioritizedAssignments.map((assignment) => ({
-        ...assignment,
-        remainingMinutes: Math.ceil(assignment.remainingHours * 60)
-    }));
+    const tasks = prioritizedAssignments.map((task) => ({ ...task }));
 
     for (const slot of availableSlots) {
-        let currentTime = timeToMinutes(slot.start);
+        let current = timeToMinutes(slot.start);
         const slotEnd = timeToMinutes(slot.end);
 
-        for (const task of tasks) {
-            while (task.remainingMinutes > 0 && currentTime < slotEnd) {
-                const availableMinutes = slotEnd - currentTime;
+        if (slotEnd - current < 20) {
+            continue;
+        }
 
-                const sessionMinutes = Math.min(
+        for (const task of tasks) {
+            while (task.remainingMinutes > 0 && current < slotEnd) {
+                const available = slotEnd - current;
+
+                if (available < 20) {
+                    break;
+                }
+
+                const duration = Math.min(
                     studyDuration,
                     task.remainingMinutes,
-                    availableMinutes
+                    available
                 );
 
-                if (sessionMinutes <= 0) {
+                if (duration < 20) {
                     break;
                 }
 
@@ -1205,39 +1807,40 @@ function generateStudyPlan(availableSlots, prioritizedAssignments) {
                     assignmentId: task.id,
                     name: task.name,
                     course: task.course,
-                    start: minutesToTime(currentTime),
-                    end: minutesToTime(currentTime + sessionMinutes),
-                    duration: sessionMinutes,
-                    completed: false
+                    start: minutesToTime(current),
+                    end: minutesToTime(current + duration),
+                    duration,
+                    completed: false,
+                    notes: ""
                 });
 
-                currentTime += sessionMinutes;
-                task.remainingMinutes -= sessionMinutes;
+                current += duration;
+                task.remainingMinutes -= duration;
 
                 const hasRemainingWork = tasks.some(
                     (item) => item.remainingMinutes > 0
                 );
 
                 if (
-                    sessionMinutes === studyDuration &&
+                    duration === studyDuration &&
                     hasRemainingWork &&
                     breakDuration > 0 &&
-                    currentTime + breakDuration < slotEnd
+                    current + breakDuration + 20 <= slotEnd
                 ) {
                     studyPlan.push({
                         id: createId(),
                         type: "break",
                         name: "Break ☕",
-                        start: minutesToTime(currentTime),
-                        end: minutesToTime(currentTime + breakDuration),
+                        start: minutesToTime(current),
+                        end: minutesToTime(current + breakDuration),
                         duration: breakDuration
                     });
 
-                    currentTime += breakDuration;
+                    current += breakDuration;
                 }
             }
 
-            if (currentTime >= slotEnd) {
+            if (slotEnd - current < 20) {
                 break;
             }
         }
@@ -1246,40 +1849,24 @@ function generateStudyPlan(availableSlots, prioritizedAssignments) {
     return studyPlan;
 }
 
-function saveDailyPlans() {
-    localStorage.setItem("dailyPlans", JSON.stringify(savedPlans));
-}
-
 generatePlanBtn.addEventListener("click", () => {
     const dateString = studyDateInput.value;
     const startTime = studyStartInput.value;
     const endTime = studyEndInput.value;
 
-    if (!dateString) {
-        alert("Please select a study date.");
+    if (!dateString || !startTime || !endTime || endTime <= startTime) {
+        alert("Please select a valid date and study time range.");
         return;
     }
 
-    if (!startTime || !endTime) {
-        alert("Please select your available study time.");
-        return;
-    }
-
-    if (endTime <= startTime) {
-        alert("End time must be after start time.");
-        return;
-    }
-
-    const existingPlan = savedPlans[dateString];
-
-    if (existingPlan) {
-        const shouldReplace = confirm(
-            `A plan is already saved for ${dateString}.\n` +
-            "Generate a new plan and replace the existing one?\n" +
-            "Your saved checkboxes and notes for this date will be reset."
+    if (savedPlans[dateString]) {
+        const replace = confirm(
+            `A plan already exists for ${dateString}.\n` +
+            "Replace it with a new plan?\n" +
+            "Existing sessions, completion status, and notes will be reset."
         );
 
-        if (!shouldReplace) {
+        if (!replace) {
             return;
         }
     }
@@ -1287,32 +1874,31 @@ generatePlanBtn.addEventListener("click", () => {
     const availableSlots = getAvailableStudySlots(
         startTime,
         endTime,
-        dateString
+        dateString,
+        availabilityDraft,
+        excludedWeeklyDraft
     );
 
-    const prioritizedAssignments =
-        getPrioritizedAssignments(dateString);
+    const prioritizedAssignments = getPrioritizedAssignments(dateString);
 
     if (availableSlots.length === 0) {
-        planMessage.textContent =
-            "No available study time for this date.";
+        planMessage.textContent = "No available study time for this date.";
         return;
     }
 
     if (prioritizedAssignments.length === 0) {
-        planMessage.textContent =
-            "No pending assignments to schedule.";
+        planMessage.textContent = "No pending assignments to schedule.";
         return;
     }
 
-    const studyPlan = generateStudyPlan(
+    const sessions = generateStudyPlan(
         availableSlots,
         prioritizedAssignments
     );
 
-    if (studyPlan.length === 0) {
+    if (sessions.length === 0) {
         planMessage.textContent =
-            "No study sessions could be generated.";
+            "No study sessions could be generated. Try a longer time range.";
         return;
     }
 
@@ -1320,76 +1906,336 @@ generatePlanBtn.addEventListener("click", () => {
         date: dateString,
         startTime,
         endTime,
-        sessions: studyPlan
+        unavailableBlocks: { ...availabilityDraft },
+        excludedWeeklyEvents: [...excludedWeeklyDraft],
+        sessions,
+        notes: ""
     };
 
     saveDailyPlans();
 
-    planMessage.textContent =
-        `Study plan saved for ${dateString}!`;
+    planMessage.textContent = `Study plan saved for ${dateString}!`;
 
-    displaySavedPlansList();
     openPlanDetail(dateString);
 });
 
-function displaySavedPlan() {
-    const dateString = studyDateInput.value;
-    const savedPlan = savedPlans[dateString];
-    const summary = document.getElementById("study-summary");
-    const dailyNotesInput = document.getElementById("daily-notes");
+function getActivePlan() {
+    return activePlanDate ? savedPlans[activePlanDate] : null;
+}
 
-    planList.innerHTML = "";
+function navigateToPage(pageId) {
+    navItems.forEach((item) => {
+        item.classList.toggle("active", item.dataset.page === pageId);
+    });
 
-    document.getElementById("study-plan-heading").textContent =
-        dateString ? `Study Plan — ${dateString}` : "Study Plan";
+    pages.forEach((page) => {
+        page.classList.toggle("active", page.id === pageId);
+    });
+}
 
-    if (
-        !savedPlan ||
-        !Array.isArray(savedPlan.sessions) ||
-        savedPlan.sessions.length === 0
-    ) {
-        planList.textContent = "No study sessions found.";
-        summary.hidden = true;
-        dailyNotesInput.value = "";
+function openPlanDetail(dateString) {
+    if (!savedPlans[dateString]) {
         return;
     }
 
-    dailyNotesInput.value = savedPlan.notes || "";
+    activePlanDate = dateString;
 
-    savedPlan.sessions.forEach((session) => {
-        const sessionItem = document.createElement("div");
-        sessionItem.className = "event-item";
+    plannerHome.hidden = true;
+    plannerDetail.hidden = false;
+
+    closeStudySessionForm();
+    displaySavedPlan();
+
+    notesMessage.textContent = "";
+
+    navigateToPage("planner");
+
+    document.getElementById("planner").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+function showPlannerHome() {
+    activePlanDate = null;
+
+    plannerDetail.hidden = true;
+    plannerHome.hidden = false;
+
+    displaySavedPlansList();
+
+    document.getElementById("planner").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+backToPlansBtn.addEventListener("click", () => {
+    const plan = getActivePlan();
+
+    if (plan && dailyNotesInput.value !== (plan.notes || "")) {
+        if (!confirm("You have unsaved Daily Notes. Leave without saving?")) {
+            return;
+        }
+    }
+
+    showPlannerHome();
+});
+
+editPlanAvailabilityBtn.addEventListener("click", () => {
+    const plan = getActivePlan();
+
+    if (!plan) {
+        return;
+    }
+
+    if (dailyNotesInput.value !== (plan.notes || "")) {
+        if (!confirm("You have unsaved Daily Notes. Leave without saving?")) {
+            return;
+        }
+    }
+
+    const dateString = activePlanDate;
+
+    showPlannerHome();
+
+    studyDateInput.value = dateString;
+    refreshAvailabilityEditor();
+    openAvailabilityEditor();
+});
+
+function displayStudySummary(sessions) {
+    const studySessions = getStudySessions(sessions);
+    const breaks = sessions.filter((session) => session.type === "break");
+
+    const studyMinutes = studySessions.reduce(
+        (total, session) => total + session.duration,
+        0
+    );
+
+    const breakMinutes = breaks.reduce(
+        (total, session) => total + session.duration,
+        0
+    );
+
+    const completed = studySessions.filter(
+        (session) => session.completed
+    ).length;
+
+    const completion = getPlanCompletion(sessions);
+
+    document.getElementById("total-study-time").textContent =
+        `${(studyMinutes / 60).toFixed(1)} hours`;
+
+    document.getElementById("study-session-count").textContent =
+        studySessions.length;
+
+    document.getElementById("total-break-time").textContent =
+        `${breakMinutes} minutes`;
+
+    document.getElementById("completed-session-count").textContent =
+        `${completed} / ${studySessions.length}`;
+
+    document.getElementById("daily-completion").textContent =
+        `${completion}%`;
+
+    document.getElementById("daily-completion-fill").style.width =
+        `${completion}%`;
+
+    document.getElementById("daily-completion-bar").setAttribute(
+        "aria-valuenow",
+        String(completion)
+    );
+
+    document.getElementById("study-summary").hidden = false;
+}
+
+function createDailyTimetableBlock({
+    start,
+    end,
+    name,
+    type,
+    onClick
+}) {
+    const plan = getActivePlan();
+
+    if (!plan) {
+        return;
+    }
+
+    const planStart = timeToMinutes(plan.startTime);
+    const planEnd = timeToMinutes(plan.endTime);
+
+    const visibleStart = Math.max(timeToMinutes(start), planStart);
+    const visibleEnd = Math.min(timeToMinutes(end), planEnd);
+
+    if (visibleEnd <= visibleStart) {
+        return;
+    }
+
+    const top = (visibleStart - planStart) / 60 * DAILY_HOUR_HEIGHT;
+    const height = (visibleEnd - visibleStart) / 60 * DAILY_HOUR_HEIGHT;
+
+    const block = document.createElement(
+        onClick ? "button" : "div"
+    );
+
+    if (onClick) {
+        block.type = "button";
+        block.addEventListener("click", onClick);
+    }
+
+    block.className = `daily-timetable-block ${type}`;
+
+    if (height < 40) {
+        block.classList.add("compact");
+    }
+
+    block.style.top = `${top}px`;
+    block.style.height = `${height}px`;
+
+    const title = document.createElement("span");
+    title.className = "daily-timetable-block-title";
+    title.textContent = name;
+
+    const time = document.createElement("span");
+    time.className = "daily-timetable-block-time";
+    time.textContent = `${start} - ${end}`;
+
+    block.appendChild(title);
+    block.appendChild(time);
+
+    block.title = `${name}\n${start} - ${end}`;
+
+    dailyTimetableEvents.appendChild(block);
+}
+
+function displayDailyTimetable() {
+    dailyTimetableTimeColumn.innerHTML = "";
+    dailyTimetableEvents.innerHTML = "";
+
+    const plan = getActivePlan();
+
+    if (!plan) {
+        return;
+    }
+
+    const start = timeToMinutes(plan.startTime);
+    const end = timeToMinutes(plan.endTime);
+    const totalHeight = (end - start) / 60 * DAILY_HOUR_HEIGHT;
+
+    dailyTimetableTimeColumn.style.height = `${totalHeight}px`;
+    dailyTimetableEvents.style.height = `${totalHeight}px`;
+
+    const firstHour = Math.ceil(start / 60);
+    const lastHour = Math.floor(end / 60);
+
+    for (let hour = firstHour; hour <= lastHour; hour++) {
+        const label = document.createElement("div");
+        label.className = "daily-time-label";
+
+        const displayHour = hour % 12 || 12;
+        const period = hour < 12 ? "AM" : "PM";
+
+        label.textContent = `${displayHour} ${period}`;
+        label.style.top =
+            `${(hour * 60 - start) / 60 * DAILY_HOUR_HEIGHT}px`;
+
+        dailyTimetableTimeColumn.appendChild(label);
+    }
+
+    const blockedRanges = getBlockedRanges(
+        activePlanDate,
+        plan.unavailableBlocks || {},
+        plan.excludedWeeklyEvents || []
+    );
+
+    blockedRanges.forEach((block) => {
+        createDailyTimetableBlock({
+            start: block.start,
+            end: block.end,
+            name: block.name,
+            type: block.type
+        });
+    });
+
+    plan.sessions.forEach((session) => {
+        createDailyTimetableBlock({
+            start: session.start,
+            end: session.end,
+            name: session.name,
+            type: session.type,
+            onClick: session.type === "study"
+                ? () => openEditStudySessionForm(session.id)
+                : null
+        });
+    });
+}
+
+function displaySavedPlan() {
+    const plan = getActivePlan();
+
+    if (!plan || !Array.isArray(plan.sessions)) {
+        return;
+    }
+
+    document.getElementById("study-plan-heading").textContent =
+        `Study Plan — ${activePlanDate}`;
+
+    planList.innerHTML = "";
+
+    dailyNotesInput.value = plan.notes || "";
+
+    const sortedSessions = [...plan.sessions].sort(
+        (a, b) => a.start.localeCompare(b.start)
+    );
+
+    sortedSessions.forEach((session) => {
+        const item = document.createElement("div");
+        item.className = "event-item";
+
+        if (session.type === "break") {
+            item.classList.add("break-session");
+
+            const title = document.createElement("strong");
+            title.textContent = session.name;
+
+            const details = document.createElement("p");
+            details.textContent =
+                `${session.start} - ${session.end} | ${session.duration} min`;
+
+            item.appendChild(title);
+            item.appendChild(details);
+            planList.appendChild(item);
+            return;
+        }
+
+        item.classList.add("study-session");
+
+        if (session.completed) {
+            item.classList.add("completed");
+        }
 
         const title = document.createElement("strong");
         title.className = "session-title";
         title.textContent = session.name;
 
         const details = document.createElement("p");
-        details.className = "session-details";
-
-        if (session.type === "break") {
-            sessionItem.classList.add("break-session");
-
-            details.textContent =
-                `${session.start} - ${session.end} | ${session.duration} min break`;
-
-            sessionItem.appendChild(title);
-            sessionItem.appendChild(details);
-            planList.appendChild(sessionItem);
-            return;
-        }
-
-        sessionItem.classList.add("study-session");
-
-        if (session.completed) {
-            sessionItem.classList.add("completed");
-        }
-
         details.textContent =
             `${session.start} - ${session.end} | ${session.course} | ${session.duration} min`;
 
-        sessionItem.appendChild(title);
-        sessionItem.appendChild(details);
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "progress-btn";
+        editBtn.textContent = "Edit Session";
+
+        editBtn.addEventListener("click", () => {
+            openEditStudySessionForm(session.id);
+        });
+
+        item.appendChild(title);
+        item.appendChild(details);
+        item.appendChild(editBtn);
 
         const checkboxLabel = document.createElement("label");
         checkboxLabel.className = "session-check";
@@ -1403,19 +2249,19 @@ function displaySavedPlan() {
 
         checkbox.addEventListener("change", () => {
             session.completed = checkbox.checked;
-            saveDailyPlans();
 
-            sessionItem.classList.toggle("completed", session.completed);
-            displayStudySummary(savedPlan.sessions);
-            displaySavedPlansList();
+            item.classList.toggle("completed", session.completed);
+
+            saveDailyPlans();
+            displayStudySummary(plan.sessions);
         });
 
         checkboxLabel.appendChild(checkbox);
         checkboxLabel.appendChild(checkboxText);
-        sessionItem.appendChild(checkboxLabel);
+        item.appendChild(checkboxLabel);
 
         const assignment = assignments.find(
-            (item) => item.id === session.assignmentId
+            (task) => task.id === session.assignmentId
         );
 
         const progressSection = document.createElement("div");
@@ -1449,15 +2295,15 @@ function displaySavedPlan() {
             progressSection.appendChild(progressBar);
             progressSection.appendChild(progressBtn);
         } else {
-            const missingText = document.createElement("p");
-            missingText.className = "session-progress-note";
-            missingText.textContent =
+            const missing = document.createElement("p");
+            missing.className = "session-progress-note";
+            missing.textContent =
                 "This assignment was deleted. Its study record is preserved.";
 
-            progressSection.appendChild(missingText);
+            progressSection.appendChild(missing);
         }
 
-        sessionItem.appendChild(progressSection);
+        item.appendChild(progressSection);
 
         const notesSection = document.createElement("div");
         notesSection.className = "session-notes";
@@ -1469,7 +2315,7 @@ function displaySavedPlan() {
         notesInput.className = "notes-input";
         notesInput.rows = 3;
         notesInput.placeholder =
-            "Add specific tasks, goals, or reminders for this session...";
+            "Add tasks, goals, or reminders for this session...";
         notesInput.value = session.notes || "";
 
         notesInput.addEventListener("input", () => {
@@ -1480,69 +2326,409 @@ function displaySavedPlan() {
         notesSection.appendChild(notesLabel);
         notesSection.appendChild(notesInput);
 
-        sessionItem.appendChild(notesSection);
-        planList.appendChild(sessionItem);
+        item.appendChild(notesSection);
+        planList.appendChild(item);
     });
 
-    displayStudySummary(savedPlan.sessions);
+    if (plan.sessions.length === 0) {
+        planList.textContent = "No study sessions found.";
+    }
+
+    displayStudySummary(plan.sessions);
+    displayDailyTimetable();
 }
 
-function displayStudySummary(studyPlan) {
-    const summary = document.getElementById("study-summary");
+function populateSessionAssignments(selectedId = "") {
+    sessionAssignmentInput.innerHTML = "";
 
-    const studySessions = studyPlan.filter(
-        (session) => session.type === "study"
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select an assignment";
+    sessionAssignmentInput.appendChild(placeholder);
+
+    assignments.forEach((assignment) => {
+        const option = document.createElement("option");
+        option.value = assignment.id;
+        option.textContent = `${assignment.course} — ${assignment.name}`;
+
+        sessionAssignmentInput.appendChild(option);
+    });
+
+    if (selectedId && !assignments.some(
+        (assignment) => assignment.id === selectedId
+    )) {
+        const plan = getActivePlan();
+        const session = plan?.sessions.find(
+            (item) => item.id === editingSessionId
+        );
+
+        const option = document.createElement("option");
+        option.value = selectedId;
+        option.textContent = `${session?.name || "Deleted assignment"} (deleted)`;
+
+        sessionAssignmentInput.appendChild(option);
+    }
+
+    sessionAssignmentInput.value = selectedId;
+}
+
+function closeStudySessionForm() {
+    studySessionForm.hidden = true;
+    studySessionForm.reset();
+
+    editingSessionId = null;
+    studySessionMessage.textContent = "";
+    deleteStudySessionBtn.hidden = true;
+}
+
+function openAddStudySessionForm() {
+    const plan = getActivePlan();
+
+    if (!plan) {
+        return;
+    }
+
+    editingSessionId = null;
+
+    populateSessionAssignments();
+
+    studySessionFormTitle.textContent = "Add Study Session";
+    saveStudySessionBtn.textContent = "Save Session";
+    deleteStudySessionBtn.hidden = true;
+
+    sessionStartInput.value = plan.startTime;
+    sessionEndInput.value = "";
+
+    studySessionForm.hidden = false;
+
+    studySessionForm.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+function openEditStudySessionForm(sessionId) {
+    const plan = getActivePlan();
+    const session = plan?.sessions.find(
+        (item) => item.id === sessionId
     );
 
-    const breakSessions = studyPlan.filter(
-        (session) => session.type === "break"
+    if (!session || session.type !== "study") {
+        return;
+    }
+
+    editingSessionId = session.id;
+
+    populateSessionAssignments(session.assignmentId);
+
+    sessionStartInput.value = session.start;
+    sessionEndInput.value = session.end;
+
+    studySessionFormTitle.textContent = "Edit Study Session";
+    saveStudySessionBtn.textContent = "Save Changes";
+    deleteStudySessionBtn.hidden = false;
+
+    studySessionForm.hidden = false;
+
+    studySessionForm.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+addStudySessionBtn.addEventListener("click", openAddStudySessionForm);
+cancelStudySessionBtn.addEventListener("click", closeStudySessionForm);
+closeStudySessionFormBtn.addEventListener("click", closeStudySessionForm);
+
+function hasSessionConflict(start, end, excludedSessionId = null) {
+    const plan = getActivePlan();
+
+    if (!plan) {
+        return true;
+    }
+
+    const blocked = getBlockedRanges(
+        activePlanDate,
+        plan.unavailableBlocks || {},
+        plan.excludedWeeklyEvents || []
     );
 
-    const totalStudyMinutes = studySessions.reduce(
-        (total, session) => total + session.duration,
-        0
+    const blockedConflict = blocked.some(
+        (range) => start < range.end && end > range.start
     );
 
-    const totalBreakMinutes = breakSessions.reduce(
-        (total, session) => total + session.duration,
-        0
+    const sessionConflict = plan.sessions.some((session) => {
+        return (
+            session.id !== excludedSessionId &&
+            start < session.end &&
+            end > session.start
+        );
+    });
+
+    return blockedConflict || sessionConflict;
+}
+
+studySessionForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const plan = getActivePlan();
+
+    if (!plan) {
+        return;
+    }
+
+    const assignmentId = sessionAssignmentInput.value;
+    const start = sessionStartInput.value;
+    const end = sessionEndInput.value;
+
+    if (!assignmentId || !start || !end || end <= start) {
+        studySessionMessage.textContent =
+            "Please enter valid session information.";
+        return;
+    }
+
+    if (start < plan.startTime || end > plan.endTime) {
+        studySessionMessage.textContent =
+            "The session must be within the plan's time range.";
+        return;
+    }
+
+    if (hasSessionConflict(start, end, editingSessionId)) {
+        studySessionMessage.textContent =
+            "This session overlaps with another session or unavailable time.";
+        return;
+    }
+
+    const assignment = assignments.find(
+        (item) => item.id === assignmentId
     );
 
-    const completedCount = studySessions.filter(
-        (session) => session.completed
-    ).length;
+    const existingSession = editingSessionId
+        ? plan.sessions.find((item) => item.id === editingSessionId)
+        : null;
 
-    const totalCount = studySessions.length;
+    if (!assignment && !existingSession) {
+        studySessionMessage.textContent =
+            "Please select an existing assignment.";
+        return;
+    }
 
-    const completion = totalCount > 0
-        ? Math.round((completedCount / totalCount) * 100)
-        : 0;
+    const duration = timeToMinutes(end) - timeToMinutes(start);
 
-    document.getElementById("total-study-time").textContent =
-        `${(totalStudyMinutes / 60).toFixed(1)} hours`;
+    if (existingSession) {
+        existingSession.assignmentId = assignmentId;
+        existingSession.name = assignment?.name || existingSession.name;
+        existingSession.course = assignment?.course || existingSession.course;
+        existingSession.start = start;
+        existingSession.end = end;
+        existingSession.duration = duration;
+    } else {
+        plan.sessions.push({
+            id: createId(),
+            type: "study",
+            assignmentId,
+            name: assignment.name,
+            course: assignment.course,
+            start,
+            end,
+            duration,
+            completed: false,
+            notes: ""
+        });
+    }
 
-    document.getElementById("study-session-count").textContent =
-        totalCount;
+    saveDailyPlans();
+    closeStudySessionForm();
+    displaySavedPlan();
+});
 
-    document.getElementById("total-break-time").textContent =
-        `${totalBreakMinutes} minutes`;
+deleteStudySessionBtn.addEventListener("click", () => {
+    const plan = getActivePlan();
 
-    document.getElementById("completed-session-count").textContent =
-        `${completedCount} / ${totalCount}`;
+    if (!plan || !editingSessionId) {
+        return;
+    }
 
-    document.getElementById("daily-completion").textContent =
-        `${completion}%`;
+    if (!confirm("Delete this study session?")) {
+        return;
+    }
 
-    document.getElementById("daily-completion-fill").style.width =
-        `${completion}%`;
+    plan.sessions = plan.sessions.filter(
+        (session) => session.id !== editingSessionId
+    );
 
-    document.getElementById("daily-completion-bar").setAttribute(
+    saveDailyPlans();
+    closeStudySessionForm();
+    displaySavedPlan();
+});
+
+function displaySavedPlansList() {
+    const list = document.getElementById("saved-plans-list");
+    list.innerHTML = "";
+
+    const dates = Object.keys(savedPlans)
+        .filter((date) => Array.isArray(savedPlans[date]?.sessions))
+        .sort((a, b) => b.localeCompare(a));
+
+    if (dates.length === 0) {
+        list.textContent = "No saved plans yet.";
+        return;
+    }
+
+    dates.forEach((date) => {
+        const plan = savedPlans[date];
+        const sessions = getStudySessions(plan.sessions);
+        const completed = sessions.filter(
+            (session) => session.completed
+        ).length;
+
+        const item = document.createElement("div");
+        item.className = "saved-plan-item";
+
+        const info = document.createElement("div");
+        info.className = "saved-plan-info";
+
+        const title = document.createElement("strong");
+        title.textContent = date;
+
+        const completion = document.createElement("p");
+        completion.textContent =
+            `${getPlanCompletion(plan.sessions)}% completed ` +
+            `(${completed}/${sessions.length} sessions)`;
+
+        const notePreview = document.createElement("p");
+        notePreview.className = "saved-plan-note";
+
+        const notes = (plan.notes || "").trim();
+
+        notePreview.textContent = notes
+            ? `📝 ${notes.length > 100 ? notes.slice(0, 100) + "..." : notes}`
+            : "📝 No notes yet";
+
+        info.appendChild(title);
+        info.appendChild(completion);
+        info.appendChild(notePreview);
+
+        const viewBtn = document.createElement("button");
+        viewBtn.type = "button";
+        viewBtn.className = "progress-btn";
+        viewBtn.textContent = "View Plan";
+
+        viewBtn.addEventListener("click", () => {
+            openPlanDetail(date);
+        });
+
+        item.appendChild(info);
+        item.appendChild(viewBtn);
+
+        list.appendChild(item);
+    });
+}
+
+saveDailyNotesBtn.addEventListener("click", () => {
+    const plan = getActivePlan();
+
+    if (!plan) {
+        notesMessage.textContent = "No saved plan found.";
+        return;
+    }
+
+    plan.notes = dailyNotesInput.value;
+
+    saveDailyPlans();
+
+    notesMessage.textContent = "Notes saved successfully!";
+});
+
+function displayDashboardStudyPlan() {
+    const today = getLocalDateString();
+    const plan = savedPlans[today];
+
+    dashboardStudyDate.textContent = today;
+
+    const hasPlan = Boolean(plan && Array.isArray(plan.sessions));
+
+    dashboardNoPlan.hidden = hasPlan;
+    dashboardExistingPlan.hidden = !hasPlan;
+    dashboardViewPlanBtn.hidden = !hasPlan;
+
+    if (!hasPlan) {
+        dashboardStudySessions.innerHTML = "";
+        return;
+    }
+
+    const completion = getPlanCompletion(plan.sessions);
+
+    dashboardDailyProgress.textContent = `${completion}%`;
+    dashboardDailyProgressFill.style.width = `${completion}%`;
+
+    dashboardDailyProgressBar.setAttribute(
         "aria-valuenow",
         String(completion)
     );
 
-    summary.hidden = false;
+    dashboardStudySessions.innerHTML = "";
+
+    const sortedSessions = [...plan.sessions].sort(
+        (a, b) => a.start.localeCompare(b.start)
+    );
+
+    sortedSessions.forEach((session) => {
+        const item = document.createElement("div");
+        item.className = "dashboard-study-session";
+
+        if (session.type === "break") {
+            item.classList.add("break");
+        } else if (session.completed) {
+            item.classList.add("completed");
+        }
+
+        const info = document.createElement("div");
+        info.className = "dashboard-study-session-info";
+
+        const title = document.createElement("strong");
+        title.textContent = session.name;
+
+        const details = document.createElement("p");
+        details.textContent = `${session.start} - ${session.end}`;
+
+        info.appendChild(title);
+        info.appendChild(details);
+
+        const status = document.createElement("span");
+        status.className = "dashboard-study-status";
+
+        if (session.type === "break") {
+            status.textContent = "Break";
+        } else {
+            status.textContent = session.completed
+                ? "✓ Completed"
+                : "Pending";
+        }
+
+        item.appendChild(info);
+        item.appendChild(status);
+
+        dashboardStudySessions.appendChild(item);
+    });
+
+    if (sortedSessions.length === 0) {
+        dashboardStudySessions.textContent =
+            "No study sessions in today's plan.";
+    }
 }
+
+dashboardViewPlanBtn.addEventListener("click", () => {
+    openPlanDetail(getLocalDateString());
+});
+
+dashboardCreatePlanBtn.addEventListener("click", () => {
+    navigateToPage("planner");
+    showPlannerHome();
+
+    studyDateInput.value = getLocalDateString();
+    refreshAvailabilityEditor();
+});
 
 const sessionDurationInput = document.getElementById("session-duration");
 const breakDurationInput = document.getElementById("break-duration");
@@ -1578,134 +2764,11 @@ saveSettingsBtn.addEventListener("click", () => {
     settingsMessage.textContent = "Settings saved successfully!";
 });
 
-function displaySavedPlansList() {
-    const savedPlansList = document.getElementById("saved-plans-list");
-    savedPlansList.innerHTML = "";
-
-    const dates = Object.keys(savedPlans)
-        .filter((date) => Array.isArray(savedPlans[date]?.sessions))
-        .sort((a, b) => b.localeCompare(a));
-
-    if (dates.length === 0) {
-        savedPlansList.textContent = "No saved plans yet.";
-        return;
-    }
-
-    dates.forEach((date) => {
-        const plan = savedPlans[date];
-
-        const studySessions = plan.sessions.filter(
-            (session) => session.type === "study"
-        );
-
-        const completedCount = studySessions.filter(
-            (session) => session.completed
-        ).length;
-
-        const completion = studySessions.length > 0
-            ? Math.round((completedCount / studySessions.length) * 100)
-            : 0;
-
-        const planItem = document.createElement("div");
-        planItem.className = "saved-plan-item";
-
-        const planInfo = document.createElement("div");
-        planInfo.className = "saved-plan-info";
-
-        const dateTitle = document.createElement("strong");
-        dateTitle.textContent = date;
-
-        const completionText = document.createElement("p");
-        completionText.textContent =
-            `${completion}% completed (${completedCount}/${studySessions.length} sessions)`;
-
-        const notePreview = document.createElement("p");
-        notePreview.className = "saved-plan-note";
-
-        const notes = (plan.notes || "").trim();
-
-        notePreview.textContent = notes
-            ? `📝 ${notes.length > 100 ? notes.slice(0, 100) + "..." : notes}`
-            : "📝 No notes yet";
-
-        planInfo.appendChild(dateTitle);
-        planInfo.appendChild(completionText);
-        planInfo.appendChild(notePreview);
-
-        const viewBtn = document.createElement("button");
-        viewBtn.type = "button";
-        viewBtn.className = "progress-btn";
-        viewBtn.textContent = "View Plan";
-
-        viewBtn.addEventListener("click", () => {
-            openPlanDetail(date);
-        });
-
-        planItem.appendChild(planInfo);
-        planItem.appendChild(viewBtn);
-        savedPlansList.appendChild(planItem);
-    });
-}
-
-const plannerHome = document.getElementById("planner-home");
-const plannerDetail = document.getElementById("planner-detail");
-const backToPlansBtn = document.getElementById("back-to-plans-btn");
-
-function openPlanDetail(dateString) {
-    if (!savedPlans[dateString]) {
-        return;
-    }
-
-    studyDateInput.value = dateString;
-
-    plannerHome.hidden = true;
-    plannerDetail.hidden = false;
-
-    displaySavedPlan();
-
-    notesMessage.textContent = "";
-
-    document.getElementById("planner").scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-}
-
-function showPlannerHome() {
-    plannerDetail.hidden = true;
-    plannerHome.hidden = false;
-
-    displaySavedPlansList();
-
-    document.getElementById("planner").scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-}
-
-backToPlansBtn.addEventListener("click", showPlannerHome);
-
-const saveDailyNotesBtn = document.getElementById("save-daily-notes-btn");
-const dailyNotesInput = document.getElementById("daily-notes");
-const notesMessage = document.getElementById("notes-message");
-
-saveDailyNotesBtn.addEventListener("click", () => {
-    const dateString = studyDateInput.value;
-    const plan = savedPlans[dateString];
-
-    if (!plan) {
-        notesMessage.textContent = "No saved plan found.";
-        return;
-    }
-
-    plan.notes = dailyNotesInput.value;
-    saveDailyPlans();
-    displaySavedPlansList();
-
-    notesMessage.textContent = "Notes saved successfully!";
-});
-
 displayEvents();
 displayAssignments();
+refreshAvailabilityEditor();
 displaySavedPlansList();
-showPlannerHome();
+displayDashboardStudyPlan();
+
+plannerDetail.hidden = true;
+plannerHome.hidden = false;

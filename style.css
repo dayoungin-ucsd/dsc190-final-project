@@ -1364,3 +1364,704 @@ select,
 #event-form .event-form-actions button {
     margin: 0;
 }
+
+.dashboard-study-card {
+    margin-bottom: 25px;
+}
+
+.dashboard-study-header,
+.daily-timetable-header,
+.planner-detail-header,
+.availability-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.dashboard-study-header {
+    margin-bottom: 18px;
+}
+
+.dashboard-study-header h3,
+.daily-timetable-header h3,
+.availability-header h3 {
+    margin-bottom: 6px;
+}
+
+.dashboard-study-header .helper-text,
+.daily-timetable-header .helper-text,
+.availability-header .helper-text {
+    margin-top: 0;
+}
+
+.dashboard-study-header button,
+.daily-timetable-header button,
+.planner-detail-header button {
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+#dashboard-no-plan p {
+    margin-bottom: 16px;
+    color: #555b70;
+    font-size: 14px;
+}
+
+#dashboard-no-plan .primary-btn {
+    margin-bottom: 0;
+}
+
+.dashboard-study-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #555b70;
+}
+
+.dashboard-study-progress strong {
+    color: #6254d8;
+    font-size: 18px;
+}
+
+#dashboard-daily-progress-bar {
+    margin-top: 0;
+    margin-bottom: 20px;
+    height: 12px;
+}
+
+#dashboard-daily-progress-fill {
+    background-color: #3a9b72;
+}
+
+.dashboard-study-session {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 13px 15px;
+    margin-top: 8px;
+    background-color: #f7f8fc;
+    border-radius: 8px;
+    border-left: 4px solid #7161e8;
+}
+
+.dashboard-study-session.completed {
+    border-left-color: #3a9b72;
+    background-color: #f1faf5;
+}
+
+.dashboard-study-session.break {
+    border-left-color: #e5b35d;
+    background-color: #fffaf0;
+}
+
+.dashboard-study-session-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dashboard-study-session-info strong {
+    display: block;
+    font-size: 13px;
+    color: #252638;
+}
+
+.dashboard-study-session-info p {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #85899c;
+}
+
+.dashboard-study-status {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6254d8;
+    white-space: nowrap;
+}
+
+.dashboard-study-session.completed .dashboard-study-status {
+    color: #3a9b72;
+}
+
+.daily-availability-card,
+.daily-weekly-events-card {
+    margin-bottom: 20px;
+}
+
+.availability-legend,
+.daily-timetable-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin: 20px 0;
+}
+
+.availability-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #555b70;
+    font-size: 13px;
+}
+
+.availability-legend-dot {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    border-radius: 4px;
+}
+
+.available-dot {
+    background-color: #d9f2e5;
+    border: 1px solid #8ac9a6;
+}
+
+.unavailable-dot {
+    background-color: #f8d7da;
+    border: 1px solid #e5a0a7;
+}
+
+.weekly-dot {
+    background-color: #e5dfff;
+    border: 1px solid #9b8de5;
+}
+
+.study-dot {
+    background-color: #7161e8;
+}
+
+.break-dot {
+    background-color: #e5b35d;
+}
+
+.availability-grid-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e8eaf2;
+    border-radius: 10px;
+}
+
+.availability-grid-header,
+.availability-grid-row {
+    display: grid;
+    grid-template-columns: 90px repeat(6, minmax(70px, 1fr));
+    min-width: 570px;
+}
+
+.availability-grid-header {
+    background-color: #f5f3ff;
+    border-bottom: 1px solid #e8eaf2;
+}
+
+.availability-grid-header span {
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6254d8;
+}
+
+.availability-grid-header span:first-child {
+    text-align: left;
+    padding-left: 16px;
+}
+
+.availability-grid-row {
+    border-bottom: 1px solid #e8eaf2;
+}
+
+.availability-grid-row:last-child {
+    border-bottom: none;
+}
+
+.availability-hour-label {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    background-color: #fafaff;
+    border-right: 1px solid #e8eaf2;
+    color: #555b70;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.availability-cell {
+    position: relative;
+    min-height: 44px;
+    border: none;
+    border-right: 1px solid white;
+    border-bottom: 1px solid white;
+    border-radius: 0;
+    background-color: #d9f2e5;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.availability-cell:hover {
+    filter: brightness(0.95);
+}
+
+.availability-cell.unavailable {
+    background-color: #f8d7da;
+}
+
+.availability-cell.weekly-event {
+    background-color: #e5dfff;
+    cursor: not-allowed;
+}
+
+.availability-cell.weekly-event:hover {
+    filter: none;
+}
+
+.availability-cell.selected {
+    outline: 2px solid #7161e8;
+    outline-offset: -2px;
+    z-index: 1;
+}
+
+.availability-cell .cell-reason {
+    display: block;
+    padding: 3px;
+    color: #9b434a;
+    font-size: 10px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.availability-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.availability-actions button {
+    margin-bottom: 0;
+}
+
+.availability-reason-section {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e8eaf2;
+}
+
+.availability-reason-section h4 {
+    font-size: 14px;
+    color: #555b70;
+    margin-bottom: 8px;
+}
+
+.availability-reason-section .helper-text {
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+.availability-reason-section label {
+    display: block;
+    margin-bottom: 6px;
+    color: #555b70;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#unavailable-reason {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #dcdfea;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+#apply-unavailable-reason-btn {
+    margin-top: 14px;
+    margin-bottom: 0;
+}
+
+.daily-weekly-event-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    background-color: #f7f8fc;
+    border-radius: 9px;
+    border-left: 4px solid var(--event-color, #7161e8);
+}
+
+.daily-weekly-event-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.daily-weekly-event-info strong {
+    display: block;
+    font-size: 14px;
+    color: #252638;
+}
+
+.daily-weekly-event-info p {
+    margin-top: 5px;
+    color: #555b70;
+    font-size: 12px;
+}
+
+.daily-weekly-event-toggle {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #555b70;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.daily-weekly-event-toggle input {
+    width: 17px;
+    height: 17px;
+    accent-color: #7161e8;
+}
+
+.planner-generate-actions {
+    margin: 24px 0;
+}
+
+.planner-generate-actions .primary-btn {
+    margin-bottom: 10px;
+}
+
+.planner-detail-header {
+    margin-bottom: 24px;
+}
+
+.planner-detail-header .subtitle {
+    margin-bottom: 0;
+}
+
+.study-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 20px;
+}
+
+.daily-timetable-card {
+    margin-bottom: 20px;
+}
+
+.daily-timetable-header {
+    margin-bottom: 10px;
+}
+
+.daily-timetable-scroll {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e8eaf2;
+    border-radius: 10px;
+}
+
+.daily-timetable {
+    --daily-hour-height: 70px;
+    display: grid;
+    grid-template-columns: 80px minmax(300px, 1fr);
+    min-width: 400px;
+    background-color: white;
+}
+
+.daily-timetable-time-column {
+    position: relative;
+    min-width: 0;
+    background-color: #fafaff;
+    border-right: 1px solid #e8eaf2;
+}
+
+.daily-timetable-events {
+    position: relative;
+    min-width: 0;
+    background-image: linear-gradient(
+        to bottom,
+        #e8eaf2 1px,
+        transparent 1px
+    );
+    background-size: 100% var(--daily-hour-height);
+}
+
+.daily-time-label {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    transform: translateY(-50%);
+    text-align: center;
+    font-size: 12px;
+    color: #85899c;
+}
+
+.daily-time-label:first-child {
+    transform: translateY(0);
+}
+
+.daily-time-label:last-child {
+    transform: translateY(-100%);
+}
+
+.daily-timetable-block {
+    position: absolute;
+    left: 8px;
+    width: calc(100% - 16px);
+    padding: 9px 12px;
+    border: none;
+    border-left: 4px solid var(--block-color, #7161e8);
+    border-radius: 7px;
+    background-color: var(--block-background, #eeebff);
+    color: #252638;
+    text-align: left;
+    overflow: hidden;
+    z-index: 1;
+}
+
+button.daily-timetable-block {
+    cursor: pointer;
+}
+
+button.daily-timetable-block:hover {
+    filter: brightness(0.97);
+    box-shadow: 0 3px 10px rgba(50, 40, 100, 0.12);
+    z-index: 2;
+}
+
+.daily-timetable-block.study {
+    --block-color: #7161e8;
+    --block-background: #eeebff;
+}
+
+.daily-timetable-block.break {
+    --block-color: #e5b35d;
+    --block-background: #fff5df;
+}
+
+.daily-timetable-block.unavailable {
+    --block-color: #d9534f;
+    --block-background: #fff0f0;
+}
+
+.daily-timetable-block.weekly {
+    --block-color: #9b8de5;
+    --block-background: #f0edff;
+}
+
+.daily-timetable-block-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.daily-timetable-block-time {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+#study-session-form {
+    margin-bottom: 20px;
+}
+
+#study-session-form label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555b70;
+}
+
+#study-session-form input,
+#study-session-form select {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #dcdfea;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+}
+
+.session-form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.session-form-actions button {
+    margin: 0;
+}
+
+.session-form-actions .delete-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+}
+
+@media (max-width: 1100px) {
+    .dashboard-study-header,
+    .daily-timetable-header,
+    .planner-detail-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-study-header button,
+    .daily-timetable-header button,
+    .planner-detail-header button {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .availability-grid-header,
+    .availability-grid-row {
+        grid-template-columns: 75px repeat(6, minmax(65px, 1fr));
+        min-width: 465px;
+    }
+
+    .study-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .daily-weekly-event-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .daily-weekly-event-toggle {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-study-session {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .availability-actions {
+        flex-direction: column;
+    }
+
+    .availability-actions button {
+        width: 100%;
+    }
+
+    .session-form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .session-form-actions button {
+        width: 100%;
+    }
+}
+
+.daily-timetable-block {
+    box-sizing: border-box;
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+}
+
+.daily-timetable-block-title {
+    font-size: 13px;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.daily-timetable-block-time {
+    font-size: 11px;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.daily-timetable-block.compact {
+    padding: 2px 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.daily-timetable-block.compact .daily-timetable-block-title {
+    font-size: 11px;
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.daily-timetable-block.compact .daily-timetable-block-time {
+    display: none;
+}
+
+.availability-grid-header span:not(:first-child) {
+    text-align: left;
+    padding-left: 4px;
+    padding-right: 0;
+}
+
+.availability-summary-card {
+    margin-bottom: 20px;
+}
+
+.availability-summary-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.availability-summary-content h3 {
+    margin-bottom: 8px;
+}
+
+#availability-summary-text {
+    color: #85899c;
+    font-size: 13px;
+    margin: 0;
+}
+
+.availability-summary-content button {
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.availability-save-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.availability-save-actions button {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .availability-summary-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .availability-save-actions {
+        flex-wrap: wrap;
+    }
+}
