@@ -798,3 +798,8 @@ select,
         justify-content: center;
     }
 }
+
+#planner-home[hidden],
+#planner-detail[hidden] {
+    display: none !important;
+}

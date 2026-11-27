@@ -1078,9 +1078,11 @@ function openPlanDetail(dateString) {
 
     displaySavedPlan();
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+    notesMessage.textContent = "";
+
+    document.getElementById("planner").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
     });
 }
 
@@ -1090,9 +1092,9 @@ function showPlannerHome() {
 
     displaySavedPlansList();
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+    document.getElementById("planner").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
     });
 }
 

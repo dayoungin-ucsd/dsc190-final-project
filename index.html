@@ -351,6 +351,53 @@
                         ></p>
                     </div>
                 </div>
+                        </section>
+
+            <section id="settings" class="page">
+                <h1>Settings</h1>
+                <p class="subtitle">
+                    Customize your study session and break durations.
+                </p>
+
+                <div class="card">
+                    <h3>Study Preferences</h3>
+
+                    <label for="session-duration">
+                        Study Session Duration (minutes)
+                    </label>
+                    <input
+                        type="number"
+                        id="session-duration"
+                        min="15"
+                        max="180"
+                        value="90"
+                    >
+
+                    <label for="break-duration">
+                        Break Duration (minutes)
+                    </label>
+                    <input
+                        type="number"
+                        id="break-duration"
+                        min="0"
+                        max="60"
+                        value="15"
+                    >
+
+                    <button
+                        type="button"
+                        class="primary-btn"
+                        id="save-settings-btn"
+                    >
+                        Save Settings
+                    </button>
+
+                    <p
+                        id="settings-message"
+                        class="status-message"
+                        role="status"
+                    ></p>
+                </div>
             </section>
         </main>
     </div>
