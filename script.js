@@ -472,13 +472,38 @@ function displayEvents() {
     if (events.length === 0) {
         eventList.textContent = "No recurring events added yet.";
     } else {
-        const sortedEvents = [...events].sort((a, b) => {
-            const dayDifference = days.indexOf(a.day) - days.indexOf(b.day);
+        const eventGroups = new Map();
 
-            return dayDifference || a.start.localeCompare(b.start);
+        events.forEach((event) => {
+            const groupId = event.groupId || event.id;
+
+            if (!eventGroups.has(groupId)) {
+                eventGroups.set(groupId, []);
+            }
+
+            eventGroups.get(groupId).push(event);
         });
 
-        sortedEvents.forEach((event) => {
+        const sortedGroups = [...eventGroups.values()].sort((a, b) => {
+            const firstDayA = Math.min(
+                ...a.map((event) => days.indexOf(event.day))
+            );
+
+            const firstDayB = Math.min(
+                ...b.map((event) => days.indexOf(event.day))
+            );
+
+            return firstDayA - firstDayB ||
+                a[0].start.localeCompare(b[0].start);
+        });
+
+        sortedGroups.forEach((group) => {
+            const event = group[0];
+
+            const selectedDays = group
+                .map((item) => item.day)
+                .sort((a, b) => days.indexOf(a) - days.indexOf(b));
+
             const item = document.createElement("div");
             item.className = "event-list-item";
 
@@ -493,7 +518,7 @@ function displayEvents() {
 
             const details = document.createElement("p");
             details.textContent =
-                `${event.day} | ${event.start} - ${event.end} | ${event.category}`;
+                `${selectedDays.join(", ")} | ${event.start} - ${event.end} | ${event.category}`;
 
             info.appendChild(title);
             info.appendChild(details);
@@ -505,6 +530,7 @@ function displayEvents() {
             editBtn.type = "button";
             editBtn.className = "progress-btn";
             editBtn.textContent = "Edit";
+
             editBtn.addEventListener("click", () => {
                 openEditEventForm(event.id);
             });
@@ -515,11 +541,16 @@ function displayEvents() {
             deleteBtn.textContent = "Delete";
 
             deleteBtn.addEventListener("click", () => {
-                if (!confirm(`Delete "${event.name}" on ${event.day}?`)) {
+                if (!confirm(
+                    `Delete "${event.name}" on ${selectedDays.join(", ")}?`
+                )) {
                     return;
                 }
 
-                events = events.filter((item) => item.id !== event.id);
+                events = events.filter(
+                    (item) => item.groupId !== event.groupId
+                );
+
                 saveEvents();
             });
 

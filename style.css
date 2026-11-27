@@ -839,10 +839,6 @@ select,
     accent-color: #7161e8;
 }
 
-#event-form .primary-btn {
-    margin-top: 24px;
-}
-
 .schedule-header {
     display: flex;
     justify-content: space-between;
@@ -1359,4 +1355,12 @@ select,
     .event-list-actions {
         justify-content: flex-start;
     }
+}
+
+#event-form .event-form-actions {
+    margin-top: 28px;
+}
+
+#event-form .event-form-actions button {
+    margin: 0;
 }
